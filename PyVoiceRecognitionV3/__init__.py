@@ -125,8 +125,8 @@ class PyVoiceRecognitionV3:
         # If the array of messages has only one object return
         # only this single element rather than a list with a
         # single element:
-        if 1 == len(messages):
-            messages = messages[0]
+        #if 1 == len(messages):
+        #    messages = messages[0]
 
         # If messages is empty than set it to None
         if [] == messages:
@@ -150,88 +150,98 @@ class PyVoiceRecognitionV3:
                 from the voice recognition module
         """
 
+        # Compile and send command; return respoonse from module
         command = self.__compile_cmd(payload = b'\x00')
         response_bin = self.__send_cmd(command)
+
+        # Initialize dict for return value of this function
+        response_dict = None
+
         if None != response_bin:
-            # Training status and record value out of range
-            if 0 == response_bin[3]:
-                sta = False
-                rverr = False
-            elif 1 == response_bin[3]:
-                sta = True
-                rverr = False
-            elif  255 == response_bin[3]:
-                sta = None
-                rverr = True
-            else:
-                sta = None
-                rverr = None
+            # The response from the module will always contain
+            # one single message
+            if 1 == len(response_bin):
+                response_bin = response_bin[0]
 
-            # Baudrate
-            if 0 == response_bin[4] or b'\x03' == response_bin[4]:
-                br = 9600
-            elif 1 == response_bin[4]:
-                br = 2400
-            elif 2 == response_bin[4]:
-                br = 4800
-            elif 4 == response_bin[4]:
-                br = 19200
-            elif 5 == response_bin[4]:
-                br = 38400
-            else:
-                br = None
+                # Training status and record value out of range
+                if 0 == response_bin[3]:
+                    sta = False
+                    rverr = False
+                elif 1 == response_bin[3]:
+                    sta = True
+                    rverr = False
+                elif  255 == response_bin[3]:
+                    sta = None
+                    rverr = True
+                else:
+                    sta = None
+                    rverr = None
 
-            # Output IO mode
-            if 0 == response_bin[5]:
-                iom = "pulse"
-            elif 1 == response_bin[5]:
-                iom = "toggle"
-            elif 2 == response_bin[5]:
-                iom = "clear"
-            elif 3 == response_bin[5]:
-                iom = "set"
-            else:
-                iom = None
+                # Baudrate
+                if 0 == response_bin[4] or b'\x03' == response_bin[4]:
+                    br = 9600
+                elif 1 == response_bin[4]:
+                    br = 2400
+                elif 2 == response_bin[4]:
+                    br = 4800
+                elif 4 == response_bin[4]:
+                    br = 19200
+                elif 5 == response_bin[4]:
+                    br = 38400
+                else:
+                    br = None
 
-            # IOPW: Output IO Pulse Width (Pulse Mode)
-            # Get pulse width length in milliseconds by looking up in
-            # the list iopw_conv:
-            try:
-                iopw = iopw_conv[response_bin[6]]
-            except:
-                iopw = None
+                # Output IO mode
+                if 0 == response_bin[5]:
+                    iom = "pulse"
+                elif 1 == response_bin[5]:
+                    iom = "toggle"
+                elif 2 == response_bin[5]:
+                    iom = "clear"
+                elif 3 == response_bin[5]:
+                    iom = "set"
+                else:
+                    iom = None
 
-            # Power on auto load
-            if 0 == response_bin[7]:
-                al = False
-            elif 1 == response_bin[7]:
-                al = False
-            else:
-                al = None
+                # IOPW: Output IO Pulse Width (Pulse Mode)
+                # Get pulse width length in milliseconds by looking up in
+                # the list iopw_conv:
+                try:
+                    iopw = iopw_conv[response_bin[6]]
+                except:
+                    iopw = None
 
-            #GRP: Group control by external IO
-            if 0 == response_bin[8]:
-                grp = "disabled"
-            elif 1 == response_bin[8]:
-                grp = "system group"
-            elif 2 == response_bin[8]:
-                grp = "user group"
-            else:
-                grp = None
+                # Power on auto load
+                if 0 == response_bin[7]:
+                    al = False
+                elif 1 == response_bin[7]:
+                    al = False
+                else:
+                    al = None
 
-            # Compile dictionary with response from module
-            response_dict = {
-                    "raw": response_bin,
-                    "trained": sta,
-                    "rec_value_out_of_range": rverr,
-                    "baudrate": br,
-                    "output_io_mode": iom,
-                    "output_io_pulse_width_ms": iopw,
-                    "autoload": al,
-                    "group_control": grp,
-                    }
+                #GRP: Group control by external IO
+                if 0 == response_bin[8]:
+                    grp = "disabled"
+                elif 1 == response_bin[8]:
+                    grp = "system group"
+                elif 2 == response_bin[8]:
+                    grp = "user group"
+                else:
+                    grp = None
 
-            return response_dict
+                # Compile dictionary with response from module
+                response_dict = {
+                        "raw": response_bin,
+                        "trained": sta,
+                        "rec_value_out_of_range": rverr,
+                        "baudrate": br,
+                        "output_io_mode": iom,
+                        "output_io_pulse_width_ms": iopw,
+                        "autoload": al,
+                        "group_control": grp,
+                        }
+
+        return response_dict
 
     def check_recognizer(self):
         """
@@ -245,40 +255,48 @@ class PyVoiceRecognitionV3:
                 from the voice recognition module
         """
 
+        # Compile and send command; return respoonse from module
         command = self.__compile_cmd(payload = b'\x01')
         response_bin = self.__send_cmd(command)
 
+        # Initialize dict for return value of this function
+        reponse_dict = None
+
         if None != response_bin:
-            # Number of valid records in recognizer (max 7)
-            rvn = response_bin[3]
+            # The response from the module will always contain
+            # one single message
+            if 1 == len(response_bin):
+                response_bin = response_bin[0]
+                # Number of valid records in recognizer (max 7)
+                rvn = response_bin[3]
 
-            # Record values in recognizer
-            vri = response_bin[4:12]
-            vri_dec = []
-            for i in range(len(vri) - 1):
-                vri_dec.append(vri[i])
+                # Record values in recognizer
+                vri = response_bin[4:12]
+                vri_dec = []
+                for i in range(len(vri) - 1):
+                    vri_dec.append(vri[i])
 
-            # Group mode indicator
-            if 255 == response_bin[11]:
-                grpm = "not in group mode"
-            # ToDo: Check if return value \x00 exists. Docu unclear
-            #
-            #elif 0 == response_bin[11]:
-            #    grpm = "system group mode"
-            elif 135 == response_bin[11]:
-                grpm == "user group mode"
-            else:
-                grpm = None
+                # Group mode indicator
+                if 255 == response_bin[11]:
+                    grpm = "not in group mode"
+                # ToDo: Check if return value \x00 exists. Docu unclear
+                #
+                #elif 0 == response_bin[11]:
+                #    grpm = "system group mode"
+                elif 135 == response_bin[11]:
+                    grpm == "user group mode"
+                else:
+                    grpm = None
 
-            # Compile dictionary with response from module
-            response_dict = {
-                    "raw": response_bin,
-                    "valid_rec_in_recognizer": rvn,
-                    "records_in_recognizer": vri_dec,
-                    "group_mode": grpm,
-                    }
+                # Compile dictionary with response from module
+                response_dict = {
+                        "raw": response_bin,
+                        "valid_rec_in_recognizer": rvn,
+                        "records_in_recognizer": vri_dec,
+                        "group_mode": grpm,
+                        }
 
-            return response_dict
+        return response_dict
 
     def check_record_train_status(self, records=None):
         """
@@ -304,12 +322,13 @@ class PyVoiceRecognitionV3:
         else:
             # Check status for all records
             payload.append(255)
+
+        # Compile and send command; return respoonse from module
         command = self.__compile_cmd(payload = payload)
         print(command)
-
         responses = self.__send_cmd(command)
 
-        if not None == responses:
+        if None != responses:
 
             # ToDo: The following if clause does not work
             if hasattr(responses, '__iter__'):
