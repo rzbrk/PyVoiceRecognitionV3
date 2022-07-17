@@ -1,6 +1,6 @@
 import serial
 import time
-import binascii
+#import binascii
 
 # Elechouse Voice Recognition Module V3*
 # Protocol definition see:
@@ -298,81 +298,58 @@ class PyVoiceRecognitionV3:
 
         return response_dict
 
-    def check_record_train_status(self, records=None):
+    def check_record_train_status(self, record=None):
         """
         Checks Record Train Status (02)
 
         Parameters:
-            records (list of int): List of records to be checked
+            record (None or int): record number to be checked. If None,
+                all records will be checked.
 
         Returns:
             response (dict): dictionary containing the response
                 from the voice recognition module
         """
 
+        # Compile the command payload (data) from the function's
+        # arguments
         payload = bytearray(b'\x02')
         # Append record or list of records to cmd payload if exists
-        if not None == records:
-            if hasattr(records, '__iter__'):
-                for r in records:
-                    payload.append(r)
-            else:
-                # Assume single record to be added to the cmd payload
-                payload.append(records)
+        if None != record:
+            payload.append(record)
         else:
             # Check status for all records
             payload.append(255)
 
         # Compile and send command; return respoonse from module
         command = self.__compile_cmd(payload = payload)
-        print(command)
-        responses = self.__send_cmd(command)
+        response_bin = self.__send_cmd(command)
 
-        if None != responses:
+        # Initialize dict for return value of this function
+        reponse_dict = None
 
-            # ToDo: The following if clause does not work
-            if hasattr(responses, '__iter__'):
-                print(responses)
-                # Number of trained records is repeated in every
-                # message. Therefore, we can pick it out of the
-                # first message
-                n = responses[0][3]
+        if None != response_bin:
+            # Loop over all messages
 
-                # Record train status
-                rec = []    # Record number
-                sta = []    # Record status
-                for resp in responses:
-                    nr = int((len(resp) - 5)/ 2)
-                    for i in range(nr):
-                        rec.append(resp[4 + 2*i])
-                        sta.append(resp[5 + 2*i])
-            else:
-                # Number of trained records
-                n = responses[3]
+            # Initialize lists to collect results from the messages
+            # in the response from the module
+            rec = []    # Record numbers
+            sta = []    # Record status
 
-                # Record train status
-                rec = []    # Record number
-                sta = []    # Record status
-                nr = int((len(responses) - 5)/ 2)
+            # Loop over all messages and fill above lists
+            for resp in response_bin:
+                nr = int((len(resp) - 5)/ 2)
                 for i in range(nr):
-                    rec.append(responses[4 + 2*i])
-                    sta.append(responses[5 + 2*i])
+                    rec.append(resp[4 + 2*i])
+                    sta.append(resp[5 + 2*i])
 
             # Compile dictionary with response from module
             response_dict = {
-                    "raw": responses,
-                    "trained_records": n,
+                    "raw": response_bin,
+                    "trained_records": len(rec),
                     "records": rec,
                     "train_status": sta,
                     }
 
-            return response_dict
+        return response_dict
 
-#cmd=binascii.a2b_hex('aa0303010a')
-#ser.write(cmd)
-#
-#b=''
-#while b != b'\n':
-#    if ser.inWaiting():
-#        b = ser.read(1)
-#        print(binascii.b2a_hex(b))
