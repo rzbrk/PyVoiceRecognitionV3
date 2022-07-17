@@ -49,12 +49,18 @@ class PyVoiceRecognitionV3:
 
     def __send_cmd(self, command):
         self.ser.write(command)
+
+    def __recv_rsp(self, tout=None):
+        if None == tout:        # Timeout in ms
+            tout = self.tout
+
+        # Initialize array for byte stream from module
         response = bytearray()
 
-        # Read byte by byte until timeout (self.tout) is
+        # Read byte by byte until timeout (tout) is
         # reached
         last = time.time()
-        while ((time.time() - last) < self.tout/1000.):
+        while ((time.time() - last) < tout/1000.):
             if self.ser.inWaiting():
                 response += self.ser.read(1)
                 last = time.time()
@@ -135,7 +141,8 @@ class PyVoiceRecognitionV3:
         return messages
 
     def send_cmd(self, command):
-        messages = self.__send_cmd(command)
+        self.__send_cmd(command)
+        messages = self.__recv_rsp()
         return messages
 
     def check_system_settings(self):
@@ -152,7 +159,8 @@ class PyVoiceRecognitionV3:
 
         # Compile and send command; return respoonse from module
         command = self.__compile_cmd(payload = b'\x00')
-        response_bin = self.__send_cmd(command)
+        self.__send_cmd(command)
+        response_bin = self.__recv_rsp()
 
         # Initialize dict for return value of this function
         response_dict = None
@@ -257,7 +265,8 @@ class PyVoiceRecognitionV3:
 
         # Compile and send command; return respoonse from module
         command = self.__compile_cmd(payload = b'\x01')
-        response_bin = self.__send_cmd(command)
+        self.__send_cmd(command)
+        response_bin = self.__recv_rsp()
 
         # Initialize dict for return value of this function
         reponse_dict = None
@@ -323,7 +332,8 @@ class PyVoiceRecognitionV3:
 
         # Compile and send command; return respoonse from module
         command = self.__compile_cmd(payload = payload)
-        response_bin = self.__send_cmd(command)
+        self.__send_cmd(command)
+        response_bin = self.__recv_rsp()
 
         # Initialize dict for return value of this function
         reponse_dict = None
@@ -359,3 +369,36 @@ class PyVoiceRecognitionV3:
 
         return response_dict
 
+#    def train_record(self):
+#        """
+#        Train record (20)
+#
+#        Parameters:
+#            record (int): Record number to train
+#
+#        Returns:
+#            response (dict): dictionary containing the response
+#                from the voice recognition module
+#        """
+#
+#        # Code from elechouse Arduino library
+#        #  train method: https://github.com/elechouse/VoiceRecognitionV3/blob/964d022b81b154b0fc5699e624d38e323915487b/VoiceRecognitionV3.cpp#L95
+#        # receive_pkt method: https://github.com/elechouse/VoiceRecognitionV3/blob/964d022b81b154b0fc5699e624d38e323915487b/VoiceRecognitionV3.cpp#L1192
+#
+#        # Compile the command payload (data) from the function's
+#        # arguments
+#        payload = bytearray(b'\x')
+#        # Append record or list of records to cmd payload if exists
+#        if None != record:
+#            payload.append(record)
+#        else:
+#            # Check status for all records
+#            payload.append(255)
+#        # Compile and send command; return respoonse from module
+#        command = self.__compile_cmd(payload = b'\x01')
+#        response_bin = self.__send_cmd(command)
+#
+#        # Initialize dict for return value of this function
+#        reponse_dict = None
+#
+#        if None != response_bin:
