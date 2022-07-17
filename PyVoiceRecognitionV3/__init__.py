@@ -71,7 +71,7 @@ class PyVoiceRecognitionV3:
         # of one or more messages.
         messages=[]
 
-        # If response from the module is already less than 4 bytes
+        # If response from the module is already less than 3 bytes
         # we can absolutely have no valid message at all. In this
         # case we do not need to go through the following while
         # loop.
@@ -82,9 +82,11 @@ class PyVoiceRecognitionV3:
 
         p = 0   # Position of "pointer" in response
         while not end_of_resp:
-            # If necessary move p to the first occurance of \xaa or
-            # 170 (decimal)
+            # If necessary move p to the first occurance of the
+            # frame head (\xaa or 170 (decimal))
             while response[p] != 170:
+                # Move the pointer to the field containing the
+                # number of data field (field after frame head)
                 p += 1
                 # The minimum-length message has 3 bytes:
                 # \xaa\x01\x0a
@@ -92,9 +94,9 @@ class PyVoiceRecognitionV3:
                     end_of_resp = True
                     break
 
-            # If a valid message starts at current position p at
-            # position (p+1) should be the length of the message
-            # without header field (\xaa) and end field (\x0a).
+            # If a valid message starts at current position p then
+            # at position (p+1) should be the length of the message
+            # (l) without header field (\xaa) and end field (\x0a).
             # Therefore, at position (p+l+1) we expect the end
             # field (\x0a or 10 decimal). If this is the case,
             # extract this part as a message and set the pointer
