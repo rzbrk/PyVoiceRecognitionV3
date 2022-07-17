@@ -338,7 +338,13 @@ class PyVoiceRecognitionV3:
 
             # Loop over all messages and fill above lists
             for resp in response_bin:
+                # The total number of trained records is repeated
+                # in every message. It makes no difference from
+                # which message we extract this info.
+                n = resp[2]
+                # Length of data/payload of message
                 nr = int((len(resp) - 5)/ 2)
+                # Extract data
                 for i in range(nr):
                     rec.append(resp[4 + 2*i])
                     sta.append(resp[5 + 2*i])
@@ -346,7 +352,7 @@ class PyVoiceRecognitionV3:
             # Compile dictionary with response from module
             response_dict = {
                     "raw": response_bin,
-                    "trained_records": len(rec),
+                    "trained_records": n,
                     "records": rec,
                     "train_status": sta,
                     }
