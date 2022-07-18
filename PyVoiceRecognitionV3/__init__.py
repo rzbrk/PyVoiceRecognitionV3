@@ -47,6 +47,8 @@ class PyVoiceRecognitionV3:
         return command
 
     def __send_cmd(self, command):
+        # Before sending a new command clear the input buffer
+        self.ser.reset_input_buffer()
         self.ser.write(command)
 
     def __recv_rsp(self, tout=None):
@@ -272,13 +274,19 @@ class PyVoiceRecognitionV3:
                 from the voice recognition module
         """
 
-        # Compile and send command; return respoonse from module
+        # Compile and send command; read response from module
         command = self.__compile_cmd(payload = b'\x01')
         self.__send_cmd(command)
-        response_bin = self.__recv_rsp()
+        # I discovered that after clearing the recognizer it takes at
+        # least two attempts to get a status response from the
+        # recognizer. Retry reading a response != None 3 times.
+        max_iter = 3
+        response_bin = None
+        while None == response_bin and max_iter > 0:
+            response_bin = self.__recv_rsp()
 
         # Initialize dict for return value of this function
-        reponse_dict = None
+        response_dict = None
 
         if None != response_bin:
             # The response from the module will always contain
@@ -345,7 +353,7 @@ class PyVoiceRecognitionV3:
         response_bin = self.__recv_rsp()
 
         # Initialize dict for return value of this function
-        reponse_dict = None
+        response_dict = None
 
         if None != response_bin:
             # Loop over all messages
@@ -530,5 +538,36 @@ class PyVoiceRecognitionV3:
                         "records": rec,
                         "status": sta,
                         }
+
+        return response_dict
+
+
+    def clear_recognizer(self):
+        """
+        Clear recognizer and stop recognizing (31)
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
+
+        # Compile and send command; return respoonse from module
+        command = self.__compile_cmd(payload = b'\x31')
+        self.__send_cmd(command)
+        response_bin = self.__recv_rsp()
+
+        # Initialize dict for return value of this function
+        response_dict = None
+
+        if None != response_bin:
+            # The response from the module will always contain
+            # one single message
+            if 1 == len(response_bin):
+                response_bin = response_bin[0]
+                sta = response_bin[3]
+
+                response_dict = { "status": sta }
 
         return response_dict
