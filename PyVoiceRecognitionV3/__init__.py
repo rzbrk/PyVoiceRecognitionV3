@@ -140,6 +140,16 @@ class PyVoiceRecognitionV3:
 
         return messages
 
+    def __bytearr2str(self, bytearr=None):
+        if None != bytearr:
+            retstr = ""
+            for b in bytearr:
+                retstr += chr(b)
+        else:
+            retstr = None
+
+        return retstr
+
     def send_cmd(self, command):
         self.__send_cmd(command)
         messages = self.__recv_rsp()
@@ -323,14 +333,14 @@ class PyVoiceRecognitionV3:
         # Compile the command payload (data) from the function's
         # arguments
         payload = bytearray(b'\x02')
-        # Append record or list of records to cmd payload if exists
+        # Append record number to cmd payload
         if None != record:
             payload.append(record)
         else:
             # Check status for all records
             payload.append(255)
 
-        # Compile and send command; return respoonse from module
+        # Compile and send command; read response from module
         command = self.__compile_cmd(payload = payload)
         self.__send_cmd(command)
         response_bin = self.__recv_rsp()
@@ -369,36 +379,76 @@ class PyVoiceRecognitionV3:
 
         return response_dict
 
-#    def train_record(self):
-#        """
-#        Train record (20)
-#
-#        Parameters:
-#            record (int): Record number to train
-#
-#        Returns:
-#            response (dict): dictionary containing the response
-#                from the voice recognition module
-#        """
-#
-#        # Code from elechouse Arduino library
-#        #  train method: https://github.com/elechouse/VoiceRecognitionV3/blob/964d022b81b154b0fc5699e624d38e323915487b/VoiceRecognitionV3.cpp#L95
-#        # receive_pkt method: https://github.com/elechouse/VoiceRecognitionV3/blob/964d022b81b154b0fc5699e624d38e323915487b/VoiceRecognitionV3.cpp#L1192
-#
-#        # Compile the command payload (data) from the function's
-#        # arguments
-#        payload = bytearray(b'\x')
-#        # Append record or list of records to cmd payload if exists
-#        if None != record:
-#            payload.append(record)
-#        else:
-#            # Check status for all records
-#            payload.append(255)
-#        # Compile and send command; return respoonse from module
-#        command = self.__compile_cmd(payload = b'\x01')
-#        response_bin = self.__send_cmd(command)
-#
-#        # Initialize dict for return value of this function
-#        reponse_dict = None
-#
-#        if None != response_bin:
+    def train_record(self, record=None):
+        """
+        Train record (20)
+
+        Parameters:
+            record (int): Record number to train
+
+        Returns:
+            response (dict): dictionary containing the response
+                from the voice recognition module
+        """
+
+        # Code from elechouse Arduino library
+        #  train method: https://github.com/elechouse/VoiceRecognitionV3/blob/964d022b81b154b0fc5699e624d38e323915487b/VoiceRecognitionV3.cpp#L95
+
+        # Initialize response dict
+        response_dict = None
+
+        # Proceed only if record number was given
+        if None != record:
+            # Compile the command payload (data) from the function's
+            # arguments
+            payload = bytearray(b'\x20')
+            # Append record number to cmd payload
+            payload.append(record)
+
+            # Compile and send command
+            command = self.__compile_cmd(payload = payload)
+            self.__send_cmd(command)
+
+            dialog_tout = 8             # timeout for dialog with module
+                                        # in seconds
+            tick = time.time()          # start time for timeout watchdog
+            train_finished = False      # indicator if training finished
+
+            # Loop until dialog timeout or training is finished
+            while (time.time() - tick < dialog_tout or train_finished):
+                # Read data from module
+                response_bin = self.__recv_rsp()
+
+                # There are two response types
+                #  1) prompt msg: b'\xaa\[l]\x0a\[rec]\[prompt]\x0a'
+                #  2) status msg: b'\xaa\[l]\x20\[num]\[rec]\[sta]\[sig]\x0a'
+
+                if None != response_bin:
+                    if 1 == len(response_bin):
+                        # Reset timeout watchdog
+                        tick = time.time()
+
+                        response_bin = response_bin[0]
+                        print(response_bin)
+
+                        # Prompt message
+                        if 10 == response_bin[2]:       # \x0a
+                            msg = response_bin[4:-1]    # msg
+                            msg = self.__bytearr2str(msg)
+                            print("Record", record, ":\t", msg)
+
+                        # Status message
+                        if 32 == response_bin[2]:       # \x20
+                            # Status message ends training
+                            train_finished = True
+                            sta = response_bin[5]       # train status
+                            print("Training ended.\t", sta)
+
+                            response_dict = {
+                                "raw": response_bin,
+                                "record": record,
+                                "training_status": sta
+                                    }
+        return response_dict
+
+
