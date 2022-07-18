@@ -1,6 +1,5 @@
 import serial
 import time
-#import binascii
 
 # Elechouse Voice Recognition Module V3*
 # Protocol definition see:
@@ -367,7 +366,14 @@ class PyVoiceRecognitionV3:
                 # Extract data
                 for i in range(nr):
                     rec.append(resp[4 + 2*i])
-                    sta.append(resp[5 + 2*i])
+                    if 0 == resp[5 + 2*i]:
+                        sta.append("untrained")
+                    elif 1 == resp[5 + 2*i]:
+                        sta.append("trained")
+                    elif 255 == resp[5 + 2*i]:
+                        sta.append("out of range")
+                    else:
+                        sta.append("unknown")
 
             # Compile dictionary with response from module
             response_dict = {
@@ -381,7 +387,7 @@ class PyVoiceRecognitionV3:
 
     def train_record(self, record=None):
         """
-        Train record (20)
+        Train a record (20)
 
         Parameters:
             record (int): Record number to train
@@ -451,4 +457,78 @@ class PyVoiceRecognitionV3:
                                     }
         return response_dict
 
+    def load_to_recognizer(self, *records):
+        """
+        Load record(s) to recognizer (30)
 
+        Parameters:
+            records (int): Record number(s) to be loaded
+                to recognizer.
+
+        Returns:
+            response (dict): dictionary containing the response
+                from the voice recognition module
+        """
+
+        # Initialize response dict
+        response_dict = None
+
+        # Proceed only if record number was given
+        if None != records:
+            # Compile the command payload (data) from the function's
+            # arguments
+            payload = bytearray(b'\x30')
+            # Append record number(s) to cmd payload
+            if hasattr(records, "__iter__"):
+                for r in records:
+                    payload.append(r)
+            else:
+                payload.append(records)
+
+            # Compile and send command; read response from module
+            command = self.__compile_cmd(payload = payload)
+            self.__send_cmd(command)
+            response_bin = self.__recv_rsp()
+
+            if None != response_bin:
+                # Loop over all messages
+
+                # Initialize lists to collect results from the messages
+                # in the response from the module
+                rec = []    # Record numbers
+                sta = []    # Record status
+
+                # Loop over all messages and fill above lists
+                for resp in response_bin:
+                    # The total number of records in recognizer is
+                    # repeated in every message. It makes no difference
+                    # from which message we extract this info.
+                    n = resp[2]
+                    # Length of data/payload of message
+                    nr = int((len(resp) - 5)/ 2)
+                    # Extract data
+                    for i in range(nr):
+                        rec.append(resp[4 + 2*i])
+                        if 0 == resp[5 + 2*i]:
+                            sta.append("success")
+                        elif 255 == resp[5 + 2*i]:
+                            sta.append("out of range")
+                        elif 254 == resp[5 + 2*i]:
+                            sta.append("record untrained")
+                        elif 253 == resp[5 + 2*i]:
+                            sta.append("recognizer full")
+                        elif 252 == resp[5 + 2*i]:
+                            sta.append("already in recognizer")
+                        else:
+                            sta.append("unknown")
+                        sta.append(resp[5 + 2*i])
+
+                # Compile dictionary with response from module
+                response_dict = {
+                        "raw": response_bin,
+                        "records_in_recognizer": n,
+                        "records": rec,
+                        "status": sta,
+                        }
+
+        return response_dict
