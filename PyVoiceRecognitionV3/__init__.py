@@ -19,9 +19,15 @@ class PyVoiceRecognitionV3:
         # 10 ms. If after this time we get no more byte than
         # assume all bytes of a response are transmitted.
             tout=10,                    # Timeout in ms
+        # Especially after sending recognizer commands it
+        # takes some time for the module to respond. A value
+        # from experience is 50 ms. After this time we can
+        # expect to get no response.
+            latency=50,                 # Response latency in ms
             ):
         self.port = port
         self.baudrate = baudrate
+        self.latency = latency
         self.tout = tout
 
         self.ser = serial.Serial(
@@ -51,15 +57,25 @@ class PyVoiceRecognitionV3:
         self.ser.reset_input_buffer()
         self.ser.write(command)
 
-    def __recv_rsp(self, tout=None):
+    def __recv_rsp(self, tout=None, latency=None):
         if None == tout:        # Timeout in ms
             tout = self.tout
+        if None == latency:     # Latency in ms
+            latency = self.latency
 
         # Initialize array for byte stream from module
         response = bytearray()
 
-        # Read byte by byte until timeout (tout) is
-        # reached
+        # For the first byte of the response allow a specific
+        # latency
+        last = time.time()
+        while ((time.time() - last) < latency/1000.):
+            if self.ser.inWaiting():
+                response += self.ser.read(1)
+                break   # Exit while loop
+
+        # Read rest of response byte by byte until timeout
+        # (tout) is reached
         last = time.time()
         while ((time.time() - last) < tout/1000.):
             if self.ser.inWaiting():
@@ -277,13 +293,7 @@ class PyVoiceRecognitionV3:
         # Compile and send command; read response from module
         command = self.__compile_cmd(payload = b'\x01')
         self.__send_cmd(command)
-        # I discovered that after clearing the recognizer it takes at
-        # least two attempts to get a status response from the
-        # recognizer. Retry reading a response != None 3 times.
-        max_iter = 3
-        response_bin = None
-        while None == response_bin and max_iter > 0:
-            response_bin = self.__recv_rsp()
+        response_bin = self.__recv_rsp()
 
         # Initialize dict for return value of this function
         response_dict = None
