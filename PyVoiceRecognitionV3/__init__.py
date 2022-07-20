@@ -327,7 +327,7 @@ class PyVoiceRecognitionV3:
                 # Compile dictionary with response from module
                 response_dict = {
                         "raw": response_bin,
-                        "valid_rec_in_recognizer": rvn,
+                        "no_records_in_recognizer": rvn,
                         "records_in_recognizer": vri_dec,
                         "group_mode": grpm,
                         }
@@ -396,8 +396,8 @@ class PyVoiceRecognitionV3:
             # Compile dictionary with response from module
             response_dict = {
                     "raw": response_bin,
-                    "trained_records": n,
-                    "records": rec,
+                    "no_trained_records": n,
+                    "trained_records": rec,
                     "train_status": sta,
                     }
 
@@ -544,8 +544,8 @@ class PyVoiceRecognitionV3:
                 # Compile dictionary with response from module
                 response_dict = {
                         "raw": response_bin,
-                        "records_in_recognizer": n,
-                        "records": rec,
+                        "no_records_in_recognizer": n,
+                        "records_in_recognizer": rec,
                         "status": sta,
                         }
 
@@ -581,3 +581,70 @@ class PyVoiceRecognitionV3:
                 response_dict = { "status": sta }
 
         return response_dict
+
+    def record_recognized(self, timeout=None):
+        """
+        Wait until trained record is recognized (0d)
+
+        Parameters:
+            timeout (int): Timeout in milliseconds to wait for
+                a recognition
+
+        Returns:
+            response (dict): dictionary containing the response
+                from the voice recognition module
+        """
+
+        # Initialize dictionary for response
+        response_dict = {
+                "raw": None,
+                "time_passed_ms": None,
+                "records_in_recognizer": None,
+                "recognized_record": None,
+                "index_recognized_record": None,
+                "signature_recognized_record": None,
+                "group_mode": None,
+                }
+
+        # First check status of recognizer. At least one record
+        # has to be loaded to recognizer.
+        status_recognizer = self.check_recognizer()
+        if status_recognizer["no_records_in_recognizer"] > 0:
+            # Populate some values in response_dict
+            response_dict["records_in_recognizer"] = status_recognizer["records_in_recognizer"]
+            response_dict["group_mode"] = status_recognizer["group_mode"]
+
+            if None == timeout:
+                # Set timeout to practically infinite
+                timeout = 10**10       # corresponds to ~ 3 years
+
+            # Default for time_passed_ms in response_dict is
+            # timeout:
+            response_dict["time_passed_ms"] = timeout
+
+            # No nead to send any command. Just wait for the module
+            # to send something
+            start = time.time()
+            while (1000 * (time.time() - start) < timeout):
+                # Read response from module
+                response_bin = self.__recv_rsp(latency = 0)
+                if None != response_bin:
+                    # We expect a single message
+                    if 1 == len(response_bin):
+                        response_bin = response_bin[0]
+                        # Proceed only if correct message type
+                        if 13 == response_bin[2]:      # \x0d
+                            response_dict["raw"] = response_bin
+                            response_dict["time_passed_ms"] = 1000 * (time.time() - start)
+                            response_dict["recognized_record"] = response_bin[5]
+                            response_dict["index_recognized_record"] = response_bin[6]
+                            sig = response_bin[8:-1]
+                            sigstr = self.__bytearr2str(sig)
+                            if "" == sigstr:
+                                sigstr = None
+                            response_dict["signature_recognized_record"] = sigstr
+
+                time.sleep(0.05)
+
+        return response_dict
+
