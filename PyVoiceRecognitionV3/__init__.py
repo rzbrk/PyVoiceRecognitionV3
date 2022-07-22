@@ -560,7 +560,8 @@ class PyVoiceRecognitionV3:
             None
 
         Returns:
-            None
+            response (dict): dictionary containing the response
+                from the voice recognition module
         """
 
         # Compile and send command; return respoonse from module

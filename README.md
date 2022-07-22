@@ -150,33 +150,104 @@ to read the response of the module to the command.
 check_system_settings()
 ```
 
+#### Parameters
+None
+
+#### Returns
+* response (dict) - dictionary containing the response from the voice
+  recognition module
+
+#### Raises
+None
+
 ### check_recognizer()
 ```
 check_recognizer()
 ```
+
+#### Parameters
+None
+
+#### Returns
+* response (dict) - dictionary containing the response from the voice
+  recognition module
+
+#### Raises
+None
 
 ### check_record_train_status()
 ```
 check_record_train_status(record=None)
 ```
 
+#### Parameters
+* record (int) or None - record number to be checked. If None, all records will
+  be checked
+
+#### Returns
+* response (dict) - dictionary containing the response from the voice
+  recognition module
+
+#### Raises
+None
+
 ### train_record()
 ```
 train_record(record=None)
 ```
+
+#### Parameters
+* record (int) - record number to be trained
+
+#### Returns
+* response (dict) - dictionary containing the response from the voice
+  recognition module
+
+#### Raises
+None
 
 ### load_to_recognizer()
 ```
 load_to_recognizer(*records)
 ```
 
+#### Parameters
+* record (int) - record number to be trained
+
+#### Returns
+* response (dict) - dictionary containing the response from the voice
+  recognition module
+
+#### Raises
+None
+
 ### clear_recognizer()
 ```
 clear_recognizer()
 ```
 
+#### Parameters
+None
+
+#### Returns
+* response (dict) - dictionary containing the response from the voice
+  recognition module
+
+#### Raises
+None
+
 ### record_recognized()
 ```
 record_recognized(timeout=None)
 ```
+
+#### Parameters
+* timeout (int) - timeout in milliseconds to wait for a recognition
+
+#### Returns
+* response (dict) - dictionary containing the response from the voice
+  recognition module
+
+#### Raises
+None
 
