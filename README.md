@@ -1,5 +1,12 @@
 # PyVoiceRecognitionV3
 
+## Installation
+```
+git clone https://github.com/rzbrk/PyVoiceRecognitionV3.git
+cd PyVoiceRecognitionV3/
+python -m pip install --user -e .
+```
+
 ## Description
 `PyVoiceRecognitionV3` is a Python class (driver) for the [Elechouse Voice
 Recognition Module V3](https://www.elechouse.com/product/speak-recognition-voice-recognition-module-v3/). The class features configuring, training and monitoring the recognition of the module.
