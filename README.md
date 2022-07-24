@@ -124,6 +124,25 @@ __bytearr2str(bytearr)
 #### Raises
 Nothing
 
+### \_\_default_callback()
+```
+__default_callback(response_dict)
+```
+
+#### Parameters
+* response (dict) - dictionary containing the response from the voice
+  recognition module
+
+#### Returns
+Nothing
+
+#### Raises
+Nothing
+
+#### Description
+This is a default calöback function for the method `record_recognized()` which
+will be invoked every time the module recognized a record.
+
 ### send_cmd()
 ```
 send_cmd(command)
@@ -158,7 +177,7 @@ None
   recognition module
 
 #### Raises
-None
+Nothing
 
 ### check_recognizer()
 ```
@@ -173,7 +192,7 @@ None
   recognition module
 
 #### Raises
-None
+Nothing
 
 ### check_record_train_status()
 ```
@@ -189,7 +208,7 @@ check_record_train_status(record=None)
   recognition module
 
 #### Raises
-None
+Nothing
 
 ### train_record()
 ```
@@ -204,7 +223,7 @@ train_record(record=None)
   recognition module
 
 #### Raises
-None
+Nothing
 
 ### load_to_recognizer()
 ```
@@ -219,7 +238,7 @@ load_to_recognizer(*records)
   recognition module
 
 #### Raises
-None
+Nothing
 
 ### clear_recognizer()
 ```
@@ -234,7 +253,7 @@ None
   recognition module
 
 #### Raises
-None
+Nothing
 
 ### record_recognized()
 ```
@@ -243,11 +262,39 @@ record_recognized(timeout=None)
 
 #### Parameters
 * timeout (int) - timeout in milliseconds to wait for a recognition
+* callback_func (name of callback function or None)
 
 #### Returns
-* response (dict) - dictionary containing the response from the voice
-  recognition module
+Nothing
 
 #### Raises
-None
+Nothing
+
+#### Description
+This method listens to the module for any recognitions for a time period
+defined by `timeout`. If `timeout` is set to `None` the method will practically
+listen indefinitely. In case a recognition happend by the module the callback
+function defined by `callback_func` is invoked. As an argument a dictionary
+will be passed to the callback function containing the response from the
+module. The dictionary for the response has the following keys:
+
+* <raw> bytearray - raw message from module
+* <time_passed_ms> float - time of recognition in miliseconds after invocation
+  of method `record_recognized()`
+* <records_in_recognizer> array of int - list of records in recognizer
+* <recognized_record> int - the record number of the recognized record
+* <index_recognized_record> int - index of the recognized record in the
+  recognizer
+* <signature_recognized_record> str or None - signature of the recognized
+  record if present, otherwise `None`
+* <group_mode> int or `None` - group mode of module
+
+A sample custom callback function could look like:
+```
+def custom_callback_function(response):
+    print("Recognized something!")
+    for key, value in response.items():
+        print("  ", key, value)
+    print("")
+```
 

@@ -167,6 +167,20 @@ class PyVoiceRecognitionV3:
 
         return retstr
 
+    def __default_callback(self, response_dict):
+        if None != response_dict["signature_recognized_record"]:
+            sign = (" ("
+                + response_dict["signature_recognized_record"]
+                + ")"
+                )
+        else:
+            sign = ""
+        print("Recognized record %d%s at time %f."
+            % (response_dict["recognized_record"],
+            sign,
+            response_dict["time_passed_ms"])
+            )
+
     def send_cmd(self, command):
         self.__send_cmd(command)
         messages = self.__recv_rsp()
@@ -583,17 +597,18 @@ class PyVoiceRecognitionV3:
 
         return response_dict
 
-    def record_recognized(self, timeout=None):
+    def record_recognized(self, timeout=None, callback_func=None):
         """
         Wait until trained record is recognized (0d)
 
         Parameters:
             timeout (int): Timeout in milliseconds to wait for
                 a recognition
+            callback_func (Name of callback function or None): Name
+                of callback function to call when record is recognized.
 
         Returns:
-            response (dict): dictionary containing the response
-                from the voice recognition module
+            Nothing
         """
 
         # Initialize dictionary for response
@@ -623,6 +638,11 @@ class PyVoiceRecognitionV3:
             # timeout:
             response_dict["time_passed_ms"] = timeout
 
+            # Check argument callback_func
+            if None == callback_func:
+                # Set to default callback function
+                callback_func = self.__default_callback
+
             # No nead to send any command. Just wait for the module
             # to send something
             start = time.time()
@@ -645,7 +665,10 @@ class PyVoiceRecognitionV3:
                                 sigstr = None
                             response_dict["signature_recognized_record"] = sigstr
 
+                            # Execute callback function
+                            callback_func(response_dict)
+
+                # Reduce "speed" of while loop to reduce cpu usage
                 time.sleep(0.05)
 
-        return response_dict
 
