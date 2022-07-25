@@ -10,7 +10,9 @@ iopw_conv = (10, 15, 20, 25, 30, 35, 40, 45, 50, 75, 100,
         100, 300, 400, 500, 1000)
 
 class PyVoiceRecognitionV3:
-
+    """
+    Python class to interact with the Elechouse Voice Recognition Module V3
+    """
     def __init__(self,
             port='/dev/ttyUSB0',        # Serial port
             baudrate=9600,              # Baudrate
@@ -25,6 +27,25 @@ class PyVoiceRecognitionV3:
         # expect to get no response.
             latency=50,                 # Response latency in ms
             ):
+        """
+        Create an instance of class ``PyVoiceRecognitionModuleV3``
+
+        Returns an instance and immediately opens a serial port connection to
+        the voice recognition module connected to the serial port ``port``.
+
+        Parameters:
+            port (device name): device name
+            baudrate (int or None): baud rate such as 9600 or 2400. If None
+                defaults to 9600 baud.
+            tout (int): timeout for the serial communication in milliseconds
+                (ms)
+            latency (int): latency for the response from the module in
+                milliseconds (ms)
+
+        Returns:
+            Nothing
+        """
+
         self.port = port
         self.baudrate = baudrate
         self.latency = latency
@@ -38,7 +59,30 @@ class PyVoiceRecognitionV3:
             bytesize=serial.EIGHTBITS
         )
 
-    def __compile_cmd(self, payload):
+    def _compile_cmd(self, payload):
+        """
+        Compiles a command for the voice recognition module
+
+        The module accepts defined commands following a protocol described in
+        https://github.com/elechouse/VoiceRecognitionV3#protocol. The method
+        accepts the command payload and returns the compliant command.
+
+        Each command ist structured as following:
+
+        |\xaa|[len]|[payload]|\x0a|
+
+        ``[len]`` is computed by the length in bytes of ``[len]`` itself
+        (always 1) plus the length of ``[payload]``.
+
+        Parameters:
+            payload (bytearray): payload to be sent to the module
+
+
+        Returns:
+            command (bytearray): compliant command following the menufacturer's
+            protocol specifications
+        """
+
         payload_len = len(payload)
         command = bytearray()
 
@@ -52,12 +96,49 @@ class PyVoiceRecognitionV3:
 
         return command
 
-    def __send_cmd(self, command):
+    def _send_cmd(self, command):
+        """
+        Sends command to the module
+
+        Before sending a comand to the module the input buffer from the serial
+        port will be flushed. This ensures that any response from the module
+        read-in after sending to the module relates to the last command.
+
+        Parameters:
+            command (bytearray): command to be send to the module.
+
+        Returns:
+            Nothing
+        """
         # Before sending a new command clear the input buffer
         self.ser.reset_input_buffer()
         self.ser.write(command)
 
-    def __recv_rsp(self, tout=None, latency=None):
+    def _recv_rsp(self, tout=None, latency=None):
+        """
+        Receive response/data from the module
+
+        The response messages follow a similar format/protocol as the commands.
+        The response can be split up into individual messages.
+
+        Each response is structured as following:
+
+        |\xaa|[len]|[data]|\x0a|
+
+        ``[len]`` is computed by the length in bytes of ``[len]`` itself
+        (always 1) plus the length of ``[data]``.
+
+        Parameters:
+            tout (int or None): timeout of the serial communication in
+                milliseconds (ms). If ``None`` defaults to ``self.tout``.
+            latency (int): latency for the response from the module in
+                milliseconds (ms). If ``None`` defaults to ``self.latency``.
+
+        Returns:
+            messages (array of bytearray): the response messages (one or
+                multiple) from the module
+        """
+
         if None == tout:        # Timeout in ms
             tout = self.tout
         if None == latency:     # Latency in ms
@@ -157,7 +238,22 @@ class PyVoiceRecognitionV3:
 
         return messages
 
-    def __bytearr2str(self, bytearr=None):
+    def _bytearr2str(self, bytearr=None):
+        """
+        Converts a bytearray to a string
+
+        Records in the module can be labelled with signatures. Signatures are
+        returned by the module as bytearrays. This method helps to convert them
+        to string variables that can be used e.g. by ``print()``.
+
+        Parameters:
+            bytearr (bytearray or None): bytearray representing e.g. a record signature
+
+        Returns:
+            retstr (str or None): string variable converted from ``bytearr``. In case
+                ``bytearr`` is ``None`` ``None`` will be returned.
+        """
+
         if None != bytearr:
             retstr = ""
             for b in bytearr:
@@ -167,7 +263,22 @@ class PyVoiceRecognitionV3:
 
         return retstr
 
-    def __default_callback(self, response_dict):
+    def _default_callback(self, response_dict):
+        """
+        Default callback function for ``record_recognized()``
+
+        This callback function can be called every time a response message from
+        the recognizer of the module is received. It accepts a dictionary
+        containing the response message and outputs some details to the screen.
+
+        Parameters:
+            response_dict (dict): dictionary containing the response message
+                from the module
+
+        Returns:
+            Nothing
+        """
+
         if None != response_dict["signature_recognized_record"]:
             sign = (" ("
                 + response_dict["signature_recognized_record"]
@@ -182,26 +293,51 @@ class PyVoiceRecognitionV3:
             )
 
     def send_cmd(self, command):
-        self.__send_cmd(command)
-        messages = self.__recv_rsp()
+        """
+        Sending a command to the module and receiving response(s)
+
+        Parameters:
+            command (bytearray): command to be sent to the module
+
+        Returns:
+            messages (array of bytearray): response messages from
+                the module
+        """
+
+        self._send_cmd(command)
+        messages = self._recv_rsp()
         return messages
 
     def check_system_settings(self):
         """
-        Checks System Settings (00)
+        Checks system settings (00)
+
+        The method returns a dictionary containing the response from the
+        module:
+
+            response_dict = {
+                    "raw": response_bin,
+                    "trained": sta,
+                    "rec_value_out_of_range": rverr,
+                    "baudrate": br,
+                    "output_io_mode": iom,
+                    "output_io_pulse_width_ms": iopw,
+                    "autoload": al,
+                    "group_control": grp,
+                    }
 
         Parameters:
             None
 
         Returns:
             response (dict): dictionary containing the response
-                from the voice recognition module
+                from the module
         """
 
         # Compile and send command; return respoonse from module
         command = self.__compile_cmd(payload = b'\x00')
-        self.__send_cmd(command)
-        response_bin = self.__recv_rsp()
+        self._send_cmd(command)
+        response_bin = self._recv_rsp()
 
         # Initialize dict for return value of this function
         response_dict = None
@@ -294,7 +430,17 @@ class PyVoiceRecognitionV3:
 
     def check_recognizer(self):
         """
-        Checks Recognizer (01)
+        Checks recognizer (01)
+
+        The method returns a dictionary containing the response message from
+        the module:
+
+            response_dict = {
+                    "raw": response_bin,
+                    "no_records_in_recognizer": rvn,
+                    "records_in_recognizer": vri_dec,
+                    "group_mode": grpm,
+                    }
 
         Parameters:
             None
@@ -306,8 +452,8 @@ class PyVoiceRecognitionV3:
 
         # Compile and send command; read response from module
         command = self.__compile_cmd(payload = b'\x01')
-        self.__send_cmd(command)
-        response_bin = self.__recv_rsp()
+        self._send_cmd(command)
+        response_bin = self._recv_rsp()
 
         # Initialize dict for return value of this function
         response_dict = None
@@ -350,8 +496,17 @@ class PyVoiceRecognitionV3:
 
     def check_record_train_status(self, record=None):
         """
-        Checks Record Train Status (02)
+        Checks record train status (02)
 
+        The method returns a dictionary containing the response message from
+        the module:
+
+            response_dict = {
+                    "raw": response_bin,
+                    "no_trained_records": n,
+                    "trained_records": rec,
+                    "train_status": sta,
+                    }
         Parameters:
             record (None or int): record number to be checked. If None,
                 all records will be checked.
@@ -373,8 +528,8 @@ class PyVoiceRecognitionV3:
 
         # Compile and send command; read response from module
         command = self.__compile_cmd(payload = payload)
-        self.__send_cmd(command)
-        response_bin = self.__recv_rsp()
+        self._send_cmd(command)
+        response_bin = self._recv_rsp()
 
         # Initialize dict for return value of this function
         response_dict = None
@@ -421,6 +576,15 @@ class PyVoiceRecognitionV3:
         """
         Train a record (20)
 
+        The method returns a dictionary containing the response message from
+        the module:
+
+            response_dict = {
+                "raw": response_bin,
+                "record": record,
+                "training_status": sta
+                    }
+
         Parameters:
             record (int): Record number to train
 
@@ -445,7 +609,7 @@ class PyVoiceRecognitionV3:
 
             # Compile and send command
             command = self.__compile_cmd(payload = payload)
-            self.__send_cmd(command)
+            self._send_cmd(command)
 
             dialog_tout = 8             # timeout for dialog with module
                                         # in seconds
@@ -455,7 +619,7 @@ class PyVoiceRecognitionV3:
             # Loop until dialog timeout or training is finished
             while (time.time() - tick < dialog_tout or train_finished):
                 # Read data from module
-                response_bin = self.__recv_rsp()
+                response_bin = self._recv_rsp()
 
                 # There are two response types
                 #  1) prompt msg: b'\xaa\[l]\x0a\[rec]\[prompt]\x0a'
@@ -472,7 +636,7 @@ class PyVoiceRecognitionV3:
                         # Prompt message
                         if 10 == response_bin[2]:       # \x0a
                             msg = response_bin[4:-1]    # msg
-                            msg = self.__bytearr2str(msg)
+                            msg = self._bytearr2str(msg)
                             print("Record", record, ":\t", msg)
 
                         # Status message
@@ -492,6 +656,16 @@ class PyVoiceRecognitionV3:
     def load_to_recognizer(self, *records):
         """
         Load record(s) to recognizer (30)
+
+        The method returns a dictionary containing the response message from
+        the module:
+
+            response_dict = {
+                    "raw": response_bin,
+                    "no_records_in_recognizer": n,
+                    "records_in_recognizer": rec,
+                    "status": sta,
+                    }
 
         Parameters:
             records (int): Record number(s) to be loaded
@@ -519,8 +693,8 @@ class PyVoiceRecognitionV3:
 
             # Compile and send command; read response from module
             command = self.__compile_cmd(payload = payload)
-            self.__send_cmd(command)
-            response_bin = self.__recv_rsp()
+            self._send_cmd(command)
+            response_bin = self._recv_rsp()
 
             if None != response_bin:
                 # Loop over all messages
@@ -570,6 +744,11 @@ class PyVoiceRecognitionV3:
         """
         Clear recognizer and stop recognizing (31)
 
+        The method returns a dictionary containing the response message from
+        the module:
+
+            response_dict = { "status": sta }
+
         Parameters:
             None
 
@@ -580,8 +759,8 @@ class PyVoiceRecognitionV3:
 
         # Compile and send command; return respoonse from module
         command = self.__compile_cmd(payload = b'\x31')
-        self.__send_cmd(command)
-        response_bin = self.__recv_rsp()
+        self._send_cmd(command)
+        response_bin = self._recv_rsp()
 
         # Initialize dict for return value of this function
         response_dict = None
@@ -600,6 +779,34 @@ class PyVoiceRecognitionV3:
     def record_recognized(self, timeout=None, callback_func=None):
         """
         Wait until trained record is recognized (0d)
+
+        This method requires that at least one record is loaded to the
+        recognizer of the module. It waits until ``timeout`` for a response
+        message indicating that the module recognized a voice input.
+
+        A callback function can be defined by ``callback_func``. If no custom
+        callback function is provided (``None``) the default callback function
+        ``_default_callback`` is used.
+        module. The dictionary for the response has the following keys:
+
+        * raw (bytearray): raw message from module
+        * time_passed_ms (float): time of recognition in miliseconds after invocation
+          of method ``record_recognized()``
+        * records_in_recognizer (array of int): list of records in recognizer
+        * recognized_record (int): the record number of the recognized record
+        * index_recognized_record (int): index of the recognized record in the
+          recognizer
+        * signature_recognized_record (str or None): signature of the recognized
+          record if present, otherwise ``None``
+        * group_mode (int or None): group mode of module
+
+        A sample custom callback function could look like:
+
+            def custom_callback_function(response):
+                print("Recognized something!")
+                for key, value in response.items():
+                    print("  ", key, value)
+                print("")
 
         Parameters:
             timeout (int): Timeout in milliseconds to wait for
@@ -641,14 +848,14 @@ class PyVoiceRecognitionV3:
             # Check argument callback_func
             if None == callback_func:
                 # Set to default callback function
-                callback_func = self.__default_callback
+                callback_func = self._default_callback
 
             # No nead to send any command. Just wait for the module
             # to send something
             start = time.time()
             while (1000 * (time.time() - start) < timeout):
                 # Read response from module
-                response_bin = self.__recv_rsp(latency = 0)
+                response_bin = self._recv_rsp(latency = 0)
                 if None != response_bin:
                     # We expect a single message
                     if 1 == len(response_bin):
@@ -660,7 +867,7 @@ class PyVoiceRecognitionV3:
                             response_dict["recognized_record"] = response_bin[5]
                             response_dict["index_recognized_record"] = response_bin[6]
                             sig = response_bin[8:-1]
-                            sigstr = self.__bytearr2str(sig)
+                            sigstr = self._bytearr2str(sig)
                             if "" == sigstr:
                                 sigstr = None
                             response_dict["signature_recognized_record"] = sigstr
