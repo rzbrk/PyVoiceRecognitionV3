@@ -271,6 +271,23 @@ CLASSES
      |      Returns:
      |          Nothing
      |  
+     |  restore_system_settings(self)
+     |      Restore the system settings of the module to defaults (10)
+     |      
+     |      The method returns a dictionary containing the response message from
+     |      the module:
+     |      
+     |          response_dict = {
+     |              "raw": response_bin,
+     |                  }
+     |      
+     |      Parameters:
+     |          None
+     |      
+     |      Returns:
+     |          response (dict): dictionary containing the response
+     |              from the voice recognition module
+     |  
      |  send_cmd(self, command)
      |      Sending a command to the module and receiving response(s)
      |      

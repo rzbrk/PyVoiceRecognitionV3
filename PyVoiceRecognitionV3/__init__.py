@@ -661,6 +661,39 @@ class PyVoiceRecognitionV3:
         return response_dict
 
     # restore_system_settings (10)
+    def restore_system_settings(self):
+        """
+        Restore the system settings of the module to defaults (10)
+
+        The method returns a dictionary containing the response message from
+        the module:
+
+            response_dict = {
+                "raw": response_bin,
+                    }
+
+        Parameters:
+            None
+
+        Returns:
+            response (dict): dictionary containing the response
+                from the voice recognition module
+        """
+
+        # Compile the command payload (data)
+        payload = bytearray(b'\x10')
+
+        # Compile and send command; read response from module
+        command = self._compile_cmd(payload = payload)
+        self._send_cmd(command)
+        response_bin = self._recv_rsp()
+
+        # Initialize dict for return value of this function
+        response_dict = {
+            "raw": response_bin,
+                }
+
+        return response_dict
 
     # set_baudrate (11)
 
