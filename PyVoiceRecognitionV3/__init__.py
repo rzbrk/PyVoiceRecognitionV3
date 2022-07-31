@@ -9,6 +9,9 @@ import time
 iopw_conv = (10, 15, 20, 25, 30, 35, 40, 45, 50, 75, 100,
         100, 300, 400, 500, 1000)
 
+# List to convert hex values for baudrate values
+br_conv = (9600, 2400, 4800, 9600, 19200, 38400)
+
 # Properties for record signature
 sign_max_len = 26               # Maximum length for signature
 sign_char_min_ascii = 33        # Minimum ASCII code for sign. character
@@ -375,17 +378,10 @@ class PyVoiceRecognitionV3:
                     rverr = None
 
                 # Baudrate
-                if 0 == response_bin[4] or b'\x03' == response_bin[4]:
-                    br = 9600
-                elif 1 == response_bin[4]:
-                    br = 2400
-                elif 2 == response_bin[4]:
-                    br = 4800
-                elif 4 == response_bin[4]:
-                    br = 19200
-                elif 5 == response_bin[4]:
-                    br = 38400
-                else:
+                # Look up value in list br_conv
+                try:
+                    br = br_conv[response_bin[4]]
+                except:
                     br = None
 
                 # Output IO mode
