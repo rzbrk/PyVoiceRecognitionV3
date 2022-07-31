@@ -21,6 +21,6 @@ The Elechouse Voice Recognition module is a speaker-dependent voice recognition 
 
 ![Elechouse Voice Recognition Module V3.1 - bottom side](./assets/module_bottom.jpg)
 
-## Class methods
+## Source Code Documentation
 
 See [here](docs/README.md).
