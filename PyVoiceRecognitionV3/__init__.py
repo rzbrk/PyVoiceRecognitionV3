@@ -9,6 +9,18 @@ import time
 iopw_conv = (10, 15, 20, 25, 30, 35, 40, 45, 50, 75, 100,
         100, 300, 400, 500, 1000)
 
+# Properties for record signature
+sign_max_len = 80               # Maximum length for signature
+sign_char_min_ascii = 33        # Minimum ASCII code for sign. character
+sign_char_max_ascii = 126       # Maximum ASCII code for sign. character
+
+class BadSignature(Exception):
+    """
+    Raised when record signature contains bad characters (not in ASCII range 33
+    to 126) or when record signature is too long (longer than 80 characters).
+    """
+    pass
+
 class PyVoiceRecognitionV3:
     """
     Python class to interact with the Elechouse Voice Recognition Module V3
@@ -335,7 +347,7 @@ class PyVoiceRecognitionV3:
         """
 
         # Compile and send command; return respoonse from module
-        command = self.__compile_cmd(payload = b'\x00')
+        command = self._compile_cmd(payload = b'\x00')
         self._send_cmd(command)
         response_bin = self._recv_rsp()
 
@@ -451,7 +463,7 @@ class PyVoiceRecognitionV3:
         """
 
         # Compile and send command; read response from module
-        command = self.__compile_cmd(payload = b'\x01')
+        command = self._compile_cmd(payload = b'\x01')
         self._send_cmd(command)
         response_bin = self._recv_rsp()
 
@@ -527,7 +539,7 @@ class PyVoiceRecognitionV3:
             payload.append(255)
 
         # Compile and send command; read response from module
-        command = self.__compile_cmd(payload = payload)
+        command = self._compile_cmd(payload = payload)
         self._send_cmd(command)
         response_bin = self._recv_rsp()
 
@@ -572,9 +584,9 @@ class PyVoiceRecognitionV3:
 
         return response_dict
 
-    def train_record(self, record=None):
+    def train_record(self, record=None, signature=None):
         """
-        Train a record (20)
+        Train a record without (20) or with signature (21)
 
         The method returns a dictionary containing the response message from
         the module:
@@ -582,15 +594,27 @@ class PyVoiceRecognitionV3:
             response_dict = {
                 "raw": response_bin,
                 "record": record,
+                "signature": signature,
                 "training_status": sta
                     }
 
+        The signature for a record (optional) can be considered as a "label"
+        for the record. In principle, the module allows any ASCII character
+        with ASCII code < 255. A maximum number of characters for the signature
+        is also not specified for the module. To avoid any potential problems
+        the character range is limited from "!" (ASCII 33) to "~" (ASCII 126).
+        Not more than 80 characters are allowed.
+
         Parameters:
             record (int): Record number to train
+            signature (str or None): Signature for record
 
         Returns:
             response (dict): dictionary containing the response
                 from the voice recognition module
+
+        Raises:
+            BadSignature: signature is too long or contains bad characters
         """
 
         # Code from elechouse Arduino library
@@ -599,16 +623,37 @@ class PyVoiceRecognitionV3:
         # Initialize response dict
         response_dict = None
 
+        if None != signature:
+            # Check for "good signature"
+            # 1) Length of signature
+            if len(signature) > sign_max_len:
+                raise BadSignature
+            # 2) Search for bad characters
+            for c in range(len(signature)):
+                if ord(signature[c]) < sign_char_min_ascii or ord(signature[c]) > sign_char_max_ascii:
+                    raise BadSignature
+
         # Proceed only if record number was given
         if None != record:
             # Compile the command payload (data) from the function's
-            # arguments
-            payload = bytearray(b'\x20')
-            # Append record number to cmd payload
-            payload.append(record)
+            # arguments. If no signature is provided use command 20, else
+            # command 21
+            if None == signature:
+                # No signature => command 20
+                payload = bytearray(b'\x20')
+                # Append record number to cmd payload
+                payload.append(record)
+            else:
+                # Signature => command 21
+                payload = bytearray(b'\x21')
+                # Append record number to cmd payload
+                payload.append(record)
+                # Append characters of signature as ASCII codes
+                for c in range(len(signature)):
+                    payload.append(ord(signature[c]))
 
             # Compile and send command
-            command = self.__compile_cmd(payload = payload)
+            command = self._compile_cmd(payload = payload)
             self._send_cmd(command)
 
             dialog_tout = 8             # timeout for dialog with module
@@ -631,7 +676,7 @@ class PyVoiceRecognitionV3:
                         tick = time.time()
 
                         response_bin = response_bin[0]
-                        print(response_bin)
+                        #print(response_bin)
 
                         # Prompt message
                         if 10 == response_bin[2]:       # \x0a
@@ -639,7 +684,7 @@ class PyVoiceRecognitionV3:
                             msg = self._bytearr2str(msg)
                             print("Record", record, ":\t", msg)
 
-                        # Status message
+                        # Status message (20: train w/o signature)
                         if 32 == response_bin[2]:       # \x20
                             # Status message ends training
                             train_finished = True
@@ -649,8 +694,24 @@ class PyVoiceRecognitionV3:
                             response_dict = {
                                 "raw": response_bin,
                                 "record": record,
+                                "signature": None,
                                 "training_status": sta
                                     }
+
+                        # Status message (21: train with signature)
+                        if 33 == response_bin[2]:       # \x20
+                            # Status message ends training
+                            train_finished = True
+                            sta = response_bin[5]       # train status
+                            print("Training ended.\t", sta)
+
+                            response_dict = {
+                                "raw": response_bin,
+                                "record": record,
+                                "signature": signature,
+                                "training_status": sta
+                                    }
+
         return response_dict
 
     def load_to_recognizer(self, *records):
@@ -692,7 +753,7 @@ class PyVoiceRecognitionV3:
                 payload.append(records)
 
             # Compile and send command; read response from module
-            command = self.__compile_cmd(payload = payload)
+            command = self._compile_cmd(payload = payload)
             self._send_cmd(command)
             response_bin = self._recv_rsp()
 
@@ -758,7 +819,7 @@ class PyVoiceRecognitionV3:
         """
 
         # Compile and send command; return respoonse from module
-        command = self.__compile_cmd(payload = b'\x31')
+        command = self._compile_cmd(payload = b'\x31')
         self._send_cmd(command)
         response_bin = self._recv_rsp()
 

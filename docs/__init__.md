@@ -4,8 +4,81 @@ NAME
     __init__
 
 CLASSES
+    builtins.Exception(builtins.BaseException)
+        BadSignature
     builtins.object
         PyVoiceRecognitionV3
+    
+    class BadSignature(builtins.Exception)
+     |  Raised when record signature contains bad characters (not in ASCII range 33
+     |  to 126) or when record signature is too long (longer than 80 characters).
+     |  
+     |  Method resolution order:
+     |      BadSignature
+     |      builtins.Exception
+     |      builtins.BaseException
+     |      builtins.object
+     |  
+     |  Data descriptors defined here:
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from builtins.Exception:
+     |  
+     |  __init__(self, /, *args, **kwargs)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods inherited from builtins.Exception:
+     |  
+     |  __new__(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from builtins.BaseException:
+     |  
+     |  __delattr__(self, name, /)
+     |      Implement delattr(self, name).
+     |  
+     |  __getattribute__(self, name, /)
+     |      Return getattr(self, name).
+     |  
+     |  __reduce__(...)
+     |      Helper for pickle.
+     |  
+     |  __repr__(self, /)
+     |      Return repr(self).
+     |  
+     |  __setattr__(self, name, value, /)
+     |      Implement setattr(self, name, value).
+     |  
+     |  __setstate__(...)
+     |  
+     |  __str__(self, /)
+     |      Return str(self).
+     |  
+     |  with_traceback(...)
+     |      Exception.with_traceback(tb) --
+     |      set self.__traceback__ to tb and return self.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from builtins.BaseException:
+     |  
+     |  __cause__
+     |      exception cause
+     |  
+     |  __context__
+     |      exception context
+     |  
+     |  __dict__
+     |  
+     |  __suppress_context__
+     |  
+     |  __traceback__
+     |  
+     |  args
     
     class PyVoiceRecognitionV3(builtins.object)
      |  PyVoiceRecognitionV3(port='/dev/ttyUSB0', baudrate=9600, tout=10, latency=50)
@@ -182,8 +255,8 @@ CLASSES
      |          messages (array of bytearray): response messages from
      |              the module
      |  
-     |  train_record(self, record=None)
-     |      Train a record (20)
+     |  train_record(self, record=None, signature=None)
+     |      Train a record without (20) or with signature (21)
      |      
      |      The method returns a dictionary containing the response message from
      |      the module:
@@ -191,15 +264,27 @@ CLASSES
      |          response_dict = {
      |              "raw": response_bin,
      |              "record": record,
+     |              "signature": signature,
      |              "training_status": sta
      |                  }
      |      
+     |      The signature for a record (optional) can be considered as a "label"
+     |      for the record. In principle, the module allows any ASCII character
+     |      with ASCII code < 255. A maximum number of characters for the signature
+     |      is also not specified for the module. To avoid any potential problems
+     |      the character range is limited from "!" (ASCII 33) to "~" (ASCII 126).
+     |      Not more than 80 characters are allowed.
+     |      
      |      Parameters:
      |          record (int): Record number to train
+     |          signature (str or None): Signature for record
      |      
      |      Returns:
      |          response (dict): dictionary containing the response
      |              from the voice recognition module
+     |      
+     |      Raises:
+     |          BadSignature: signature is too long or contains bad characters
      |  
      |  ----------------------------------------------------------------------
      |  Data descriptors defined here:
@@ -212,6 +297,9 @@ CLASSES
 
 DATA
     iopw_conv = (10, 15, 20, 25, 30, 35, 40, 45, 50, 75, 100, 100, 300, 40...
+    sign_char_max_ascii = 126
+    sign_char_min_ascii = 33
+    sign_max_len = 80
 
 FILE
     /home/jan/Projekte/Programme/PyVoiceRecognitionV3/PyVoiceRecognitionV3/__init__.py
