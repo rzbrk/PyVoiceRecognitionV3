@@ -580,7 +580,85 @@ class PyVoiceRecognitionV3:
 
         return response_dict
 
-    # check_record_signature (03)
+    def check_record_signature(self, record=None):
+        """
+        Check the signature of a record (03)
+
+        The method returns a dictionary containing the response message from
+        the module:
+
+            response_dict = {
+                "raw": response_bin,
+                "record": record,
+                "signature": signature,
+                    }
+
+        The signature for a record (optional) can be considered as a "label"
+        for the record. In principle, the module allows any ASCII character
+        with ASCII code < 255. The maximum number of characters for the
+        signature is 26 (derived from test on module V3.1). To avoid any
+        potential problems the character range is limited from "!" (ASCII 33)
+        to "~" (ASCII 126).
+
+        Parameters:
+            record (int): Record number
+
+        Returns:
+            response (dict): dictionary containing the response
+                from the voice recognition module
+        """
+
+        # Initialize response dict
+        response_dict = None
+
+        # Proceed only if record number was given
+        if None != record:
+            # If this method is applied to a record that is not trained and has
+            # no signature it will not return meaningful results. The signature
+            # returned by the module will contain some random characters. This
+            # is an issue of the module. Therefore, as a first step determine
+            # the traning status of the record. Only, if the record is trained
+            # ask the module for the signature.
+
+            # Get training status for the record
+            sta = self.check_record_train_status(record)["train_status"][0]
+
+            if "trained" == sta:
+                # Compile the command payload (data)
+                payload = bytearray(b'\x03')
+                payload.append(record)
+
+                # Compile and send command; read response from module
+                command = self._compile_cmd(payload = payload)
+                self._send_cmd(command)
+                response_bin = self._recv_rsp()
+
+                # Initialize dict for return value of this function
+                response_dict = None
+
+                if None != response_bin:
+                    # The response from the module will always contain
+                    # one single message
+                    if 1 == len(response_bin):
+                        response_bin = response_bin[0]
+
+                        # Compile dictionary with response from module
+                        sign = self._bytearr2str(response_bin[5:-1])
+                        response_dict = {
+                                "raw": response_bin,
+                                "record": record,
+                                "signature": sign,
+                                }
+            else:
+                # For untrained records no meaningful response from the module
+                # can be retrieved
+                response_dict = {
+                        "raw": None,
+                        "record": record,
+                        "signature": None,
+                        }
+
+        return response_dict
 
     # restore_system_settings (10)
 
