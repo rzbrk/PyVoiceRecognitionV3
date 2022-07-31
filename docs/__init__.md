@@ -5,9 +5,80 @@ NAME
 
 CLASSES
     builtins.Exception(builtins.BaseException)
+        BadBaudrate
         BadSignature
     builtins.object
         PyVoiceRecognitionV3
+    
+    class BadBaudrate(builtins.Exception)
+     |  Raised when baudrate is not supported by module.
+     |  
+     |  Method resolution order:
+     |      BadBaudrate
+     |      builtins.Exception
+     |      builtins.BaseException
+     |      builtins.object
+     |  
+     |  Data descriptors defined here:
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from builtins.Exception:
+     |  
+     |  __init__(self, /, *args, **kwargs)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods inherited from builtins.Exception:
+     |  
+     |  __new__(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from builtins.BaseException:
+     |  
+     |  __delattr__(self, name, /)
+     |      Implement delattr(self, name).
+     |  
+     |  __getattribute__(self, name, /)
+     |      Return getattr(self, name).
+     |  
+     |  __reduce__(...)
+     |      Helper for pickle.
+     |  
+     |  __repr__(self, /)
+     |      Return repr(self).
+     |  
+     |  __setattr__(self, name, value, /)
+     |      Implement setattr(self, name, value).
+     |  
+     |  __setstate__(...)
+     |  
+     |  __str__(self, /)
+     |      Return str(self).
+     |  
+     |  with_traceback(...)
+     |      Exception.with_traceback(tb) --
+     |      set self.__traceback__ to tb and return self.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from builtins.BaseException:
+     |  
+     |  __cause__
+     |      exception cause
+     |  
+     |  __context__
+     |      exception context
+     |  
+     |  __dict__
+     |  
+     |  __suppress_context__
+     |  
+     |  __traceback__
+     |  
+     |  args
     
     class BadSignature(builtins.Exception)
      |  Raised when record signature contains bad characters (not in ASCII range 33
@@ -104,6 +175,9 @@ CLASSES
      |      
      |      Returns:
      |          Nothing
+     |      
+     |      Raises:
+     |          BadBaudrate: When an unsupported baud rate ``baudrate`` is given
      |  
      |  check_recognizer(self)
      |      Checks recognizer (01)
@@ -297,6 +371,36 @@ CLASSES
      |      Returns:
      |          messages (array of bytearray): response messages from
      |              the module
+     |  
+     |  set_baudrate(self, baudrate=None)
+     |      Set the baud rate of the module (11)
+     |      
+     |      The following baud rates are supported by the module:
+     |      
+     |      * 2400 baud
+     |      * 4800 baud
+     |      * 9600 baud
+     |      * 19200 baud
+     |      * 38400 baud
+     |      
+     |      The change of baudrate takes effect only after restarting the module.
+     |      
+     |      The method returns a dictionary containing the response message from
+     |      the module:
+     |      
+     |          response_dict = {
+     |              "raw": response_bin,
+     |                  }
+     |      
+     |      Parameters:
+     |          baudrate (int): baud rate
+     |      
+     |      Returns:
+     |          response (dict): dictionary containing the response
+     |              from the voice recognition module
+     |      
+     |      Raises:
+     |          BadBaudrate: When no or an unsupported baud rate is given
      |  
      |  set_signature(self, record=None, signature=None)
      |      Set signature for record (22)

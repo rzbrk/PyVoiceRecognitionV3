@@ -24,6 +24,12 @@ class BadSignature(Exception):
     """
     pass
 
+class BadBaudrate(Exception):
+    """
+    Raised when baudrate is not supported by module.
+    """
+    pass
+
 class PyVoiceRecognitionV3:
     """
     Python class to interact with the Elechouse Voice Recognition Module V3
@@ -59,7 +65,14 @@ class PyVoiceRecognitionV3:
 
         Returns:
             Nothing
+
+        Raises:
+            BadBaudrate: When an unsupported baud rate ``baudrate`` is given
         """
+
+        # Check if valid baudrate was provided
+        if not (baudrate in br_conv):
+            raise BadBaudrate
 
         self.port = port
         self.baudrate = baudrate
@@ -67,8 +80,8 @@ class PyVoiceRecognitionV3:
         self.tout = tout
 
         self.ser = serial.Serial(
-            port='/dev/ttyUSB0',
-            baudrate=9600,
+            port=self.port,
+            baudrate=self.baudrate,
             parity=serial.PARITY_NONE,
             stopbits=serial.STOPBITS_ONE,
             bytesize=serial.EIGHTBITS
@@ -660,7 +673,6 @@ class PyVoiceRecognitionV3:
 
         return response_dict
 
-    # restore_system_settings (10)
     def restore_system_settings(self):
         """
         Restore the system settings of the module to defaults (10)
@@ -695,7 +707,65 @@ class PyVoiceRecognitionV3:
 
         return response_dict
 
-    # set_baudrate (11)
+    def set_baudrate(self, baudrate=None):
+        """
+        Set the baud rate of the module (11)
+
+        The following baud rates are supported by the module:
+
+        * 2400 baud
+        * 4800 baud
+        * 9600 baud
+        * 19200 baud
+        * 38400 baud
+
+        The change of baudrate takes effect only after restarting the module.
+
+        The method returns a dictionary containing the response message from
+        the module:
+
+            response_dict = {
+                "raw": response_bin,
+                    }
+
+        Parameters:
+            baudrate (int): baud rate
+
+        Returns:
+            response (dict): dictionary containing the response
+                from the voice recognition module
+
+        Raises:
+            BadBaudrate: When no or an unsupported baud rate is given
+        """
+
+        if None != baudrate:
+            if (baudrate in br_conv):
+                for br in range(len(br_conv)):
+                    if br_conv[br] == baudrate:
+                        break
+            else:
+                raise BadBaudrate
+        else:
+            raise BadBaudrate
+
+        # Compile the command payload (data)
+        payload = bytearray(b'\x11')
+        payload.append(br)
+
+        # Compile and send command; read response from module
+        command = self._compile_cmd(payload = payload)
+        self._send_cmd(command)
+        response_bin = self._recv_rsp()
+
+        # Initialize dict for return value of this function
+        response_dict = {
+            "raw": response_bin,
+            "baudrate": baudrate,
+                }
+
+        return response_dict
+
 
     # set_output_io_mode (12)
 
