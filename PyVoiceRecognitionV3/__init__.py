@@ -584,6 +584,20 @@ class PyVoiceRecognitionV3:
 
         return response_dict
 
+    # check_record_signature (03)
+
+    # restore_system_settings (10)
+
+    # set_baudrate (11)
+
+    # set_output_io_mode (12)
+
+    # set_output_io_pulse_width (13)
+
+    # reset_output_io (14)
+
+    # set_power_on_auto_load (15)
+
     def train_record(self, record=None, signature=None):
         """
         Train a record without (20) or with signature (21)
@@ -908,6 +922,8 @@ class PyVoiceRecognitionV3:
                 response_dict = { "status": sta }
 
         return response_dict
+
+    # group_control (32)
 
     def record_recognized(self, timeout=None, callback_func=None):
         """
