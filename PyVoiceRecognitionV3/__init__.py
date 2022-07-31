@@ -767,7 +767,12 @@ class PyVoiceRecognitionV3:
         return response_dict
 
 
-    # set_output_io_mode (12)
+    def set_output_io_mode(self, mode=None):
+        """
+
+        """
+
+
 
     # set_output_io_pulse_width (13)
 
