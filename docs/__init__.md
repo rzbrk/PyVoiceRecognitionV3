@@ -11,7 +11,7 @@ CLASSES
     
     class BadSignature(builtins.Exception)
      |  Raised when record signature contains bad characters (not in ASCII range 33
-     |  to 126) or when record signature is too long (longer than 80 characters).
+     |  to 126) or when record signature is too long (longer than 26 characters).
      |  
      |  Method resolution order:
      |      BadSignature
@@ -255,6 +255,36 @@ CLASSES
      |          messages (array of bytearray): response messages from
      |              the module
      |  
+     |  set_signature(self, record=None, signature=None)
+     |      Set signature for record (22)
+     |      
+     |      The signature for a record (optional) can be considered as a "label"
+     |      for the record. In principle, the module allows any ASCII character
+     |      with ASCII code < 255. The maximum number of characters for the
+     |      signature is 26 (derived from test on module V3.1). To avoid any
+     |      potential problems the character range is limited from "!" (ASCII 33)
+     |      to "~" (ASCII 126).
+     |      
+     |      The method returns a dictionary containing the response message from
+     |      the module:
+     |      
+     |          response_dict = {
+     |              "raw": response_bin,
+     |              "record": record,
+     |              "signature": signature,
+     |                  }
+     |      
+     |      Parameters:
+     |          record (int): Record number to train
+     |          signature (str or None): Signature for record
+     |      
+     |      Returns:
+     |          response (dict): dictionary containing the response
+     |              from the voice recognition module
+     |      
+     |      Raises:
+     |          BadSignature: signature is too long or contains bad characters
+     |  
      |  train_record(self, record=None, signature=None)
      |      Train a record without (20) or with signature (21)
      |      
@@ -270,10 +300,10 @@ CLASSES
      |      
      |      The signature for a record (optional) can be considered as a "label"
      |      for the record. In principle, the module allows any ASCII character
-     |      with ASCII code < 255. A maximum number of characters for the signature
-     |      is also not specified for the module. To avoid any potential problems
-     |      the character range is limited from "!" (ASCII 33) to "~" (ASCII 126).
-     |      Not more than 80 characters are allowed.
+     |      with ASCII code < 255. The maximum number of characters for the
+     |      signature is 26 (derived from test on module V3.1). To avoid any
+     |      potential problems the character range is limited from "!" (ASCII 33)
+     |      to "~" (ASCII 126).
      |      
      |      Parameters:
      |          record (int): Record number to train
@@ -299,7 +329,7 @@ DATA
     iopw_conv = (10, 15, 20, 25, 30, 35, 40, 45, 50, 75, 100, 100, 300, 40...
     sign_char_max_ascii = 126
     sign_char_min_ascii = 33
-    sign_max_len = 80
+    sign_max_len = 26
 
 FILE
     /home/jan/Projekte/Programme/PyVoiceRecognitionV3/PyVoiceRecognitionV3/__init__.py

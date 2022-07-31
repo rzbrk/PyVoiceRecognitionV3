@@ -10,14 +10,14 @@ iopw_conv = (10, 15, 20, 25, 30, 35, 40, 45, 50, 75, 100,
         100, 300, 400, 500, 1000)
 
 # Properties for record signature
-sign_max_len = 80               # Maximum length for signature
+sign_max_len = 26               # Maximum length for signature
 sign_char_min_ascii = 33        # Minimum ASCII code for sign. character
 sign_char_max_ascii = 126       # Maximum ASCII code for sign. character
 
 class BadSignature(Exception):
     """
     Raised when record signature contains bad characters (not in ASCII range 33
-    to 126) or when record signature is too long (longer than 80 characters).
+    to 126) or when record signature is too long (longer than 26 characters).
     """
     pass
 
@@ -600,10 +600,10 @@ class PyVoiceRecognitionV3:
 
         The signature for a record (optional) can be considered as a "label"
         for the record. In principle, the module allows any ASCII character
-        with ASCII code < 255. A maximum number of characters for the signature
-        is also not specified for the module. To avoid any potential problems
-        the character range is limited from "!" (ASCII 33) to "~" (ASCII 126).
-        Not more than 80 characters are allowed.
+        with ASCII code < 255. The maximum number of characters for the
+        signature is 26 (derived from test on module V3.1). To avoid any
+        potential problems the character range is limited from "!" (ASCII 33)
+        to "~" (ASCII 126).
 
         Parameters:
             record (int): Record number to train
@@ -623,8 +623,8 @@ class PyVoiceRecognitionV3:
         # Initialize response dict
         response_dict = None
 
+        # Check for "good signature"
         if None != signature:
-            # Check for "good signature"
             # 1) Length of signature
             if len(signature) > sign_max_len:
                 raise BadSignature
@@ -711,6 +711,78 @@ class PyVoiceRecognitionV3:
                                 "signature": signature,
                                 "training_status": sta
                                     }
+
+        return response_dict
+
+    def set_signature(self, record=None, signature=None):
+        """
+        Set signature for record (22)
+
+        The signature for a record (optional) can be considered as a "label"
+        for the record. In principle, the module allows any ASCII character
+        with ASCII code < 255. The maximum number of characters for the
+        signature is 26 (derived from test on module V3.1). To avoid any
+        potential problems the character range is limited from "!" (ASCII 33)
+        to "~" (ASCII 126).
+
+        The method returns a dictionary containing the response message from
+        the module:
+
+            response_dict = {
+                "raw": response_bin,
+                "record": record,
+                "signature": signature,
+                    }
+
+        Parameters:
+            record (int): Record number to train
+            signature (str or None): Signature for record
+
+        Returns:
+            response (dict): dictionary containing the response
+                from the voice recognition module
+
+        Raises:
+            BadSignature: signature is too long or contains bad characters
+        """
+
+        # Initialize response dict
+        response_dict = None
+
+        # Check for "good signature"
+        if None != signature:
+            # 1) Length of signature
+            if len(signature) > sign_max_len:
+                raise BadSignature
+            # 2) Search for bad characters
+            for c in range(len(signature)):
+                if ord(signature[c]) < sign_char_min_ascii or ord(signature[c]) > sign_char_max_ascii:
+                    raise BadSignature
+
+        # Proceed only if record number was given
+        if None != record:
+            # Compile the command payload (data) from the function's
+            # arguments.
+            if None == signature:
+                signature = ""
+
+            payload = bytearray(b'\x22')
+            # Append record number to cmd payload
+            payload.append(record)
+            # Append characters of signature
+            for c in range(len(signature)):
+                payload.append(ord(signature[c]))
+
+            # Compile and send command. Read response from module
+            command = self._compile_cmd(payload = payload)
+            self._send_cmd(command)
+            response_bin = self._recv_rsp()
+
+            response_dict = {
+                "raw": response_bin,
+                "record": record,
+                "signature": signature,
+                    }
 
         return response_dict
 
