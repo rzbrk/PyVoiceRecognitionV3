@@ -125,6 +125,32 @@ CLASSES
      |          response (dict): dictionary containing the response
      |              from the voice recognition module
      |  
+     |  check_record_signature(self, record=None)
+     |      Check the signature of a record (03)
+     |      
+     |      The method returns a dictionary containing the response message from
+     |      the module:
+     |      
+     |          response_dict = {
+     |              "raw": response_bin,
+     |              "record": record,
+     |              "signature": signature,
+     |                  }
+     |      
+     |      The signature for a record (optional) can be considered as a "label"
+     |      for the record. In principle, the module allows any ASCII character
+     |      with ASCII code < 255. The maximum number of characters for the
+     |      signature is 26 (derived from test on module V3.1). To avoid any
+     |      potential problems the character range is limited from "!" (ASCII 33)
+     |      to "~" (ASCII 126).
+     |      
+     |      Parameters:
+     |          record (int): Record number
+     |      
+     |      Returns:
+     |          response (dict): dictionary containing the response
+     |              from the voice recognition module
+     |  
      |  check_record_train_status(self, record=None)
      |      Checks record train status (02)
      |      
@@ -326,6 +352,7 @@ CLASSES
      |      list of weak references to the object (if defined)
 
 DATA
+    br_conv = (9600, 2400, 4800, 9600, 19200, 38400)
     iopw_conv = (10, 15, 20, 25, 30, 35, 40, 45, 50, 75, 100, 100, 300, 40...
     sign_char_max_ascii = 126
     sign_char_min_ascii = 33
