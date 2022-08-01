@@ -739,8 +739,13 @@ class PyVoiceRecognitionV3:
             BadBaudrate: When no or an unsupported baud rate is given
         """
 
+        # Check if we were called with a valid baudrate value. If not raise
+        # BadBaudrate exception
         if None != baudrate:
             if (baudrate in br_conv):
+                # When this for-loop exits it provides the index value in the
+                # list br_conv (br) that will be used below to compile the
+                # command's payload
                 for br in range(len(br_conv)):
                     if br_conv[br] == baudrate:
                         break
@@ -751,6 +756,7 @@ class PyVoiceRecognitionV3:
 
         # Compile the command payload (data)
         payload = bytearray(b'\x11')
+        # Here we use br from above
         payload.append(br)
 
         # Compile and send command; read response from module
@@ -771,8 +777,6 @@ class PyVoiceRecognitionV3:
         """
 
         """
-
-
 
     # set_output_io_pulse_width (13)
 
