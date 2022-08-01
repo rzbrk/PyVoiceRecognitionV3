@@ -5,10 +5,16 @@
 Recognition Module V3](https://www.elechouse.com/product/speak-recognition-voice-recognition-module-v3/). The class features configuring, training and monitoring the recognition of the module.
 
 ## Installation
+```bash
+$ git clone https://github.com/rzbrk/PyVoiceRecognitionV3.git
+$ cd PyVoiceRecognitionV3/
+$ python -m pip install --user -e .
 ```
-git clone https://github.com/rzbrk/PyVoiceRecognitionV3.git
-cd PyVoiceRecognitionV3/
-python -m pip install --user -e .
+
+For installing also the testing packages the installation command is as
+following:
+```bash
+$ python -m pip install --user -e ".[testing]"
 ```
 
 ## The Elechouse Voice Recognition Module V3.1
