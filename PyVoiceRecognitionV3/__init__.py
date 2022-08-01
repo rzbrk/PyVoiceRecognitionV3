@@ -12,6 +12,9 @@ iopw_conv = (10, 15, 20, 25, 30, 35, 40, 45, 50, 75, 100,
 # List to convert hex values for baudrate values
 br_conv = (9600, 2400, 4800, 9600, 19200, 38400)
 
+# List to convert hex values for output IO mode
+iomode_conv = ("pulse", "toggle", "set", "clear")
+
 # Properties for record signature
 sign_max_len = 26               # Maximum length for signature
 sign_char_min_ascii = 33        # Minimum ASCII code for sign. character
@@ -27,6 +30,12 @@ class BadSignature(Exception):
 class BadBaudrate(Exception):
     """
     Raised when baudrate is not supported by module.
+    """
+    pass
+
+class BadMode(Exception):
+    """
+    Raised when output IO mode is not supported by module.
     """
     pass
 
@@ -398,15 +407,9 @@ class PyVoiceRecognitionV3:
                     br = None
 
                 # Output IO mode
-                if 0 == response_bin[5]:
-                    iom = "pulse"
-                elif 1 == response_bin[5]:
-                    iom = "toggle"
-                elif 2 == response_bin[5]:
-                    iom = "clear"
-                elif 3 == response_bin[5]:
-                    iom = "set"
-                else:
+                try:
+                    iom = iomode_conv[response_bin[5]]
+                except:
                     iom = None
 
                 # IOPW: Output IO Pulse Width (Pulse Mode)
@@ -741,7 +744,7 @@ class PyVoiceRecognitionV3:
 
         # Check if we were called with a valid baudrate value. If not raise
         # BadBaudrate exception
-        if None != baudrate:
+        if None != baudrate and isinstance(baudrate, int):
             if (baudrate in br_conv):
                 # When this for-loop exits it provides the index value in the
                 # list br_conv (br) that will be used below to compile the
@@ -775,8 +778,76 @@ class PyVoiceRecognitionV3:
 
     def set_output_io_mode(self, mode=None):
         """
+        Set the output IO mode (12)
 
+        The output IO mode determines how the output pins of the module (OUT0
+        ... OUT6) behave in case the module recognizes a voice command. The
+        output pins represent the 7 records in the recognizer. For example, if
+        the third record in the recognizer is recognized only OUT2 will be
+        affected. There are 4 different modes:
+
+        0 -- Pulse: Send negative pulse to output. The pulse width can be
+             configured with the method set_output_io_pulse_width().
+        1 -- Toggle: Toggle the output state each time a recognition takes
+             place.
+        2 -- Set: Set output to high when the module recognizes a voice
+             command. The ouput state will stay high until the state is
+             resetted with the method reset_output_io().
+        2 -- Clear: Set output to low when the module recognizes a voice
+             command. The ouput state will stay low until the state is
+             resetted with the method reset_output_io().
+
+        The method returns a dictionary containing the response message from
+        the module:
+
+            response_dict = {
+                "raw": response_bin,
+                "mode": output io mode,
+                    }
+
+        Parameters:
+            mode (str): Output IO mode ("pulse", "toggle", "set", "clear")
+
+        Returns:
+            response (dict): dictionary containing the response
+                from the voice recognition module
+
+        Raises:
+            BadMode: When no or an unsupported output IO mode is given
         """
+
+        # Check if we were called with a valid mode
+        if None != mode and isinstance(mode, str):
+            mode = mode.lower()
+            if (mode in iomode_conv):
+                # When this for-loop exits it provides the index value in the
+                # list iomode_conv (m) that will be used below to compile the
+                # command's payload
+                for m in range(len(iomode_conv)):
+                    if iomode_conv[m] == mode:
+                        break
+            else:
+                raise BadMode
+        else:
+            raise BadMode
+
+        # Compile the command payload (data)
+        payload = bytearray(b'\x12')
+        # Here we use m from above
+        payload.append(m)
+
+        # Compile and send command; read response from module
+        command = self._compile_cmd(payload = payload)
+        self._send_cmd(command)
+        response_bin = self._recv_rsp()
+
+        # Initialize dict for return value of this function
+        response_dict = {
+            "raw": response_bin,
+            "mode": mode,
+                }
+
+        return response_dict
 
     # set_output_io_pulse_width (13)
 

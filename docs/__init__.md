@@ -6,6 +6,7 @@ NAME
 CLASSES
     builtins.Exception(builtins.BaseException)
         BadBaudrate
+        BadMode
         BadSignature
     builtins.object
         PyVoiceRecognitionV3
@@ -15,6 +16,76 @@ CLASSES
      |  
      |  Method resolution order:
      |      BadBaudrate
+     |      builtins.Exception
+     |      builtins.BaseException
+     |      builtins.object
+     |  
+     |  Data descriptors defined here:
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from builtins.Exception:
+     |  
+     |  __init__(self, /, *args, **kwargs)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods inherited from builtins.Exception:
+     |  
+     |  __new__(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from builtins.BaseException:
+     |  
+     |  __delattr__(self, name, /)
+     |      Implement delattr(self, name).
+     |  
+     |  __getattribute__(self, name, /)
+     |      Return getattr(self, name).
+     |  
+     |  __reduce__(...)
+     |      Helper for pickle.
+     |  
+     |  __repr__(self, /)
+     |      Return repr(self).
+     |  
+     |  __setattr__(self, name, value, /)
+     |      Implement setattr(self, name, value).
+     |  
+     |  __setstate__(...)
+     |  
+     |  __str__(self, /)
+     |      Return str(self).
+     |  
+     |  with_traceback(...)
+     |      Exception.with_traceback(tb) --
+     |      set self.__traceback__ to tb and return self.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from builtins.BaseException:
+     |  
+     |  __cause__
+     |      exception cause
+     |  
+     |  __context__
+     |      exception context
+     |  
+     |  __dict__
+     |  
+     |  __suppress_context__
+     |  
+     |  __traceback__
+     |  
+     |  args
+    
+    class BadMode(builtins.Exception)
+     |  Raised when output IO mode is not supported by module.
+     |  
+     |  Method resolution order:
+     |      BadMode
      |      builtins.Exception
      |      builtins.BaseException
      |      builtins.object
@@ -402,6 +473,44 @@ CLASSES
      |      Raises:
      |          BadBaudrate: When no or an unsupported baud rate is given
      |  
+     |  set_output_io_mode(self, mode=None)
+     |      Set the output IO mode (12)
+     |      
+     |      The output IO mode determines how the output pins of the module (OUT0
+     |      ... OUT6) behave in case the module recognizes a voice command. The
+     |      output pins represent the 7 records in the recognizer. For example, if
+     |      the third record in the recognizer is recognized only OUT2 will be
+     |      affected. There are 4 different modes:
+     |      
+     |      0 -- Pulse: Send negative pulse to output. The pulse width can be
+     |           configured with the method set_output_io_pulse_width().
+     |      1 -- Toggle: Toggle the output state each time a recognition takes
+     |           place.
+     |      2 -- Set: Set output to high when the module recognizes a voice
+     |           command. The ouput state will stay high until the state is
+     |           resetted with the method reset_output_io().
+     |      2 -- Clear: Set output to low when the module recognizes a voice
+     |           command. The ouput state will stay low until the state is
+     |           resetted with the method reset_output_io().
+     |      
+     |      The method returns a dictionary containing the response message from
+     |      the module:
+     |      
+     |          response_dict = {
+     |              "raw": response_bin,
+     |              "mode": output io mode,
+     |                  }
+     |      
+     |      Parameters:
+     |          mode (str): Output IO mode ("pulse", "toggle", "set", "clear")
+     |      
+     |      Returns:
+     |          response (dict): dictionary containing the response
+     |              from the voice recognition module
+     |      
+     |      Raises:
+     |          BadMode: When no or an unsupported output IO mode is given
+     |  
      |  set_signature(self, record=None, signature=None)
      |      Set signature for record (22)
      |      
@@ -474,6 +583,7 @@ CLASSES
 
 DATA
     br_conv = (9600, 2400, 4800, 9600, 19200, 38400)
+    iomode_conv = ('pulse', 'toggle', 'set', 'clear')
     iopw_conv = (10, 15, 20, 25, 30, 35, 40, 45, 50, 75, 100, 100, 300, 40...
     sign_char_max_ascii = 126
     sign_char_min_ascii = 33
