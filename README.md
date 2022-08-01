@@ -35,10 +35,7 @@ system and user groups.
 Each system group holds 7 records. The system groups are fixed groups:
 
 | System Group # | Records in group |
-<<<<<<< HEAD
 |---|---|
-=======
->>>>>>> 7ed96151b3c8013caf0326b614dbe1a178498dd8
 | 0 | 0 - 6 |
 | 1 | 7 - 13 |
 | 2 | 14 - 20 |
