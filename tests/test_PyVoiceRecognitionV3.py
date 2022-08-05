@@ -1,16 +1,15 @@
 import sys
 import unittest
-from mock_serial import MockSerial
+from .MySerMock import MySerMock
 
 sys.path.append('../.')
-import PyVoiceRecognitionV3 as pvr3
+from PyVoiceRecognitionV3 import PyVoiceRecognitionV3
 
 # Mockup for serial device
-mockdev = MockSerial()
-#mockdev.open()
+mockdev = MySerMock()
 
 # Create instance of PyVoiceRecognitionV3
-vr = pvr3.PyVoiceRecognitionV3(device = mockdev)
+vr = PyVoiceRecognitionV3(device = mockdev)
 
 class Test_init(unittest.TestCase):
     """
@@ -22,8 +21,8 @@ class Test_init(unittest.TestCase):
         Test if correct instance is returned
         """
         self.assertIsInstance(
-                pvr3.PyVoiceRecognitionV3(device=mockdev),
-                pvr3.PyVoiceRecognitionV3
+                PyVoiceRecognitionV3(device=mockdev),
+                PyVoiceRecognitionV3
                 )
 
 class Test_send_cmd(unittest.TestCase):
@@ -36,17 +35,13 @@ class Test_send_cmd(unittest.TestCase):
 
         """
         cmd = b'\xaa\x02\x00\x0a'    # check sys settings (00)
-        rsp = b'\xaa\x08\x00\x00\x00\x00\x00\x00\x0a'
+        exp_rsp = b'\xaa\x08\x00\x00\x00\x00\x00\x00\x0a'
+        mockdev.append_to_inbuffer(bytearray(exp_rsp))
 
-        mockdev.stub(
-                receive_bytes = cmd,
-                send_bytes = rsp,
-                )
+        rsp = vr.send_cmd(cmd)
+        print(rsp)
 
-        r = vr.send_cmd(cmd)
-        print(r)
-
-        self.assertEqual(1,1)
+        self.assertEqual(rsp,exp_rsp)
 
 if __name__ == '__main__':
     unittest.main()
