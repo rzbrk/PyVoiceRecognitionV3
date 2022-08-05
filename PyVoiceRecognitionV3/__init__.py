@@ -1,4 +1,3 @@
-import serial
 import time
 
 # Elechouse Voice Recognition Module V3*
