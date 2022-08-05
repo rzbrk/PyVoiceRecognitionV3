@@ -17,6 +17,35 @@ following:
 $ python -m pip install --user -e ".[testing]"
 ```
 
+## Usage
+```python
+>>> import PyVoiceRecognitionV3 as pvr3
+>>> from serial import Serial
+>>> dev=Serial(port="/dev/ttyUSB0", baudrate=9600)
+
+# Help on PyVoiceRecognitionV3
+>>> help(pvr3)
+
+# Create instance of PyVoiceRecognitionV3 for module attached to /dev/ttyUSB0
+(dev)
+>>> vr=pvr3.PyVoiceRecognitionV3(device=dev)
+
+# Show current system settings of module
+>>> vr.check_system_settings()
+
+# Train record (no 10) and set signature to test
+>>> vr.train_record(10, signature="test")
+
+# Load record 10 to recognizer
+>>> vr.load_to_recognizer(10)
+
+# Check/display status of recognizer
+>>> vr.check_recognizer()
+
+# Monitor recognition by the module for the next 20 seconds
+>>> vr.record_recognized(timeout=20000)
+```
+
 ## The Elechouse Voice Recognition Module V3.1
 
 ![Elechouse Voice Recognition Module V3.1](./assets/module_with_mic.jpg)
