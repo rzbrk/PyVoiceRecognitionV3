@@ -20,6 +20,7 @@ class Test_init(unittest.TestCase):
         """
         Test if correct instance is returned
         """
+        print("Test if correct instance is returned")
         self.assertIsInstance(
                 PyVoiceRecognitionV3(device=mockdev),
                 PyVoiceRecognitionV3
@@ -32,14 +33,15 @@ class Test_send_cmd(unittest.TestCase):
 
     def test_send_recv(self):
         """
-
+        Test basic communication with method send_cmd()
         """
+        print("Test basic communication with method send_cmd()")
         cmd = b'\xaa\x02\x00\x0a'    # check sys settings (00)
-        exp_rsp = b'\xaa\x08\x00\x00\x00\x00\x00\x00\x0a'
-        mockdev.append_to_inbuffer(bytearray(exp_rsp))
+        exp_rsp = [bytearray(b'\xaa\x08\x00\x00\x00\x00\x00\x00\x00\x0a')]
+        for msg in exp_rsp:
+            mockdev.append_to_inbuffer(msg)
 
         rsp = vr.send_cmd(cmd)
-        print(rsp)
 
         self.assertEqual(rsp,exp_rsp)
 
