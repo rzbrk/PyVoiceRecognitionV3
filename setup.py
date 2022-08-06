@@ -14,7 +14,7 @@ setup(name = 'PyVoiceRecognitionV3',
     # See: https://godatadriven.com/blog/a-practical-guide-to-using-setup-py/
     extras_require = {
         # Install: pip install -e ".[testing]"
-        'testing': [ "mock_serial" ],
+        'testing': [ ],
         }
     )
 
