@@ -1,7 +1,7 @@
-Help on module __init__:
+Help on module pvr3:
 
 NAME
-    __init__
+    pvr3
 
 CLASSES
     builtins.Exception(builtins.BaseException)
@@ -223,22 +223,21 @@ CLASSES
      |  args
     
     class PyVoiceRecognitionV3(builtins.object)
-     |  PyVoiceRecognitionV3(port='/dev/ttyUSB0', baudrate=9600, tout=10, latency=50)
+     |  PyVoiceRecognitionV3(device=None, tout=10, latency=50)
      |  
      |  Python class to interact with the Elechouse Voice Recognition Module V3
      |  
      |  Methods defined here:
      |  
-     |  __init__(self, port='/dev/ttyUSB0', baudrate=9600, tout=10, latency=50)
+     |  __init__(self, device=None, tout=10, latency=50)
      |      Create an instance of class ``PyVoiceRecognitionModuleV3``
      |      
      |      Returns an instance and immediately opens a serial port connection to
-     |      the voice recognition module connected to the serial port ``port``.
+     |      the voice recognition module connected to the serial device
+     |      ``device``.
      |      
      |      Parameters:
-     |          port (device name): device name
-     |          baudrate (int or None): baud rate such as 9600 or 2400. If None
-     |              defaults to 9600 baud.
+     |          device (device): serial device
      |          tout (int): timeout for the serial communication in milliseconds
      |              (ms)
      |          latency (int): latency for the response from the module in
@@ -246,9 +245,6 @@ CLASSES
      |      
      |      Returns:
      |          Nothing
-     |      
-     |      Raises:
-     |          BadBaudrate: When an unsupported baud rate ``baudrate`` is given
      |  
      |  check_recognizer(self)
      |      Checks recognizer (01)
@@ -590,6 +586,6 @@ DATA
     sign_max_len = 26
 
 FILE
-    /home/jan/Projekte/Programme/PyVoiceRecognitionV3/PyVoiceRecognitionV3/__init__.py
+    /home/jan/Projekte/Programme/PyVoiceRecognitionV3/PyVoiceRecognitionV3/pvr3.py
 
 

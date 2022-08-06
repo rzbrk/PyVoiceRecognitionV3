@@ -4,4 +4,5 @@
 
 ## PyVoiceRecognitionV3
 
-[__init__.py](__init__.md)
+* [PyVoiceRecognition](pvr3.md)
+* [MySerMock](mysermock.md)
