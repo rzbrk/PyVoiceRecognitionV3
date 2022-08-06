@@ -1,9 +1,8 @@
 import sys
 import unittest
-from .MySerMock import MySerMock
 
 sys.path.append('../.')
-from PyVoiceRecognitionV3 import PyVoiceRecognitionV3
+from PyVoiceRecognitionV3 import PyVoiceRecognitionV3, MySerMock
 
 # Mockup for serial device
 mockdev = MySerMock()
