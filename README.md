@@ -19,7 +19,7 @@ $ python -m pip install --user -e ".[testing]"
 
 ## Usage
 ```python
->>> import PyVoiceRecognitionV3 as pvr3
+>>> from PyVoiceRecognition import PyVoiceRecognitionV3
 >>> from serial import Serial
 >>> dev=Serial(port="/dev/ttyUSB0", baudrate=9600)
 
@@ -28,7 +28,7 @@ $ python -m pip install --user -e ".[testing]"
 
 # Create instance of PyVoiceRecognitionV3 for module attached to /dev/ttyUSB0
 (dev)
->>> vr=pvr3.PyVoiceRecognitionV3(device=dev)
+>>> vr=PyVoiceRecognitionV3(device=dev)
 
 # Show current system settings of module
 >>> vr.check_system_settings()
