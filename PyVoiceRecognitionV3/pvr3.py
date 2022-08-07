@@ -560,7 +560,7 @@ class PyVoiceRecognitionV3:
                 # The total number of trained records is repeated
                 # in every message. It makes no difference from
                 # which message we extract this info.
-                n = resp[2]
+                n = resp[3]
                 # Length of data/payload of message
                 nr = int((len(resp) - 5)/ 2)
                 # Extract data
