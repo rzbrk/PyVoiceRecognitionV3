@@ -38,6 +38,12 @@ class BadMode(Exception):
     """
     pass
 
+class BadPulseWidth(Exception):
+    """
+    Raised when output IO pulsewidth is not supported by module.
+    """
+    pass
+
 class PyVoiceRecognitionV3:
     """
     Python class to interact with the Elechouse Voice Recognition Module V3
@@ -791,7 +797,7 @@ class PyVoiceRecognitionV3:
 
             response_dict = {
                 "raw": response_bin,
-                "mode": output io mode,
+                "output_io_mode": output io mode,
                     }
 
         Parameters:
@@ -833,12 +839,72 @@ class PyVoiceRecognitionV3:
         # Initialize dict for return value of this function
         response_dict = {
             "raw": response_bin,
-            "mode": mode,
+            "output_io_mode": mode,
                 }
 
         return response_dict
 
-    # set_output_io_pulse_width (13)
+    def set_output_io_pulse_width(self, pulsewidth=None):
+        """
+        Set output IO pulse width (13)
+
+        The method sets the output io pulse width of the module. It takes
+        effect directly after the execution of the command.
+
+        The method returns a dictionary containing the response message from
+        the module:
+
+            response_dict = {
+                "raw": response_bin,
+                "output_io_pulse_width_hex": hex value for pulsewidth,
+                "output_io_pulse_width_ms": pulsewidth in ms,
+                    }
+
+        Parameters:
+            pulsewidth (int): Pulse width in milliseconds. Only sepcific values
+                are allowed: 10, 15, 20, 25, 30, 35, 40, 45, 50, 75, 100, 200,
+                300, 400, 500, 1000 ms.
+
+        Returns:
+            response (dict): dictionary containing the response
+                from the voice recognition module
+
+        Raises:
+            BadPulseWidth: pulse width wrong or unsupported
+        """
+
+        # Check if we were called with a valid pulse width
+        if None != pulsewidth and isinstance(pulsewidth, int):
+            if (pulsewidth in iopw_conv):
+                # When this for-loop exits it provides the index value in the
+                # list iopw_conv (pw) that will be used below to compile the
+                # command's payload
+                for pw in range(len(iopw_conv)):
+                    if iopw_conv[pw] == pulsewidth:
+                        break
+            else:
+                raise BadPulseWidth
+        else:
+            raise BadPulseWidth
+
+        # Compile the command payload (data)
+        payload = bytearray(b'\x13')
+        # Here we use pw from above
+        payload.append(pw)
+
+        # Compile and send command; read response from module
+        command = self._compile_cmd(payload = payload)
+        self._send_cmd(command)
+        response_bin = self._recv_rsp()
+
+        # Initialize dict for return value of this function
+        response_dict = {
+            "raw": response_bin,
+            "output_io_pulse_width_hex": hex(pw),
+            "output_io_pulse_width_ms": pulsewidth,
+                }
+
+        return response_dict
 
     # reset_output_io (14)
 
