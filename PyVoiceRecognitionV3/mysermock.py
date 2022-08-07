@@ -15,6 +15,8 @@ class MySerMock:
         Returns:
             Nothing
         """
+
+        # Initialize the input buffer inbuffer
         if None != inbuffer:
             self.inbuffer = inbuffer
         else:
@@ -25,6 +27,11 @@ class MySerMock:
             self.timeout = timeout
         else:
             self.timeout = 60
+
+        # Initialize the output buffer outbuffer. The output buffer can be used
+        # to check what would have been sent to the module. The write() methods
+        # appends to outbuffer.
+        self.outbuffer =bytearray(b'')
 
     def read(self, n_bytes):
         """
@@ -66,7 +73,7 @@ class MySerMock:
         """
         Write data to mock serial port
 
-        This method actually does nothing
+        This method actually append data to outbuffer
 
         Parameters:
             * data (bytearray): data to be sent
@@ -74,7 +81,7 @@ class MySerMock:
         Returns:
             Nothinng
         """
-        pass
+        self.outbuffer.extend(data)
 
     def reset_input_buffer(self):
         """
