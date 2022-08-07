@@ -122,7 +122,6 @@ class MySerMock:
         Returns:
             Nothing
         """
-        empty=bytearray(b'')
-        self.inbuffer = empty
-        self.outbuffer = empty
+        self.inbuffer = bytearray(b'')
+        self.outbuffer = bytearray(b'')
 
