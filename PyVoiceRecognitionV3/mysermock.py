@@ -15,6 +15,8 @@ class MySerMock:
         Returns:
             Nothing
         """
+
+        # Initialize the input buffer inbuffer
         if None != inbuffer:
             self.inbuffer = inbuffer
         else:
@@ -26,9 +28,16 @@ class MySerMock:
         else:
             self.timeout = 60
 
+        # Initialize the output buffer outbuffer. The output buffer can be used
+        # to check what would have been sent to the module. The write() methods
+        # appends to outbuffer.
+        self.outbuffer = bytearray(b'')
+
     def read(self, n_bytes):
         """
         Read data from mock serial port
+
+        What is read is removed from inbuffer
 
         Parameters:
             * n_bytes (int): Number of bytes to read. If n_bytes is larger than
@@ -66,7 +75,7 @@ class MySerMock:
         """
         Write data to mock serial port
 
-        This method actually does nothing
+        This method actually append data to outbuffer
 
         Parameters:
             * data (bytearray): data to be sent
@@ -74,7 +83,7 @@ class MySerMock:
         Returns:
             Nothinng
         """
-        pass
+        self.outbuffer.extend(data)
 
     def reset_input_buffer(self):
         """
@@ -82,12 +91,18 @@ class MySerMock:
 
         This method actually does nothing and will not reset anything. For the
         purposes of testing this is expected.
+
+        For resetting inbuffer and outbuffer use the reset() method.
+
         """
         pass
 
     def append_to_inbuffer(self, data):
         """
         Append new data to the input buffer
+
+        This method is intended to be used for simulating sending of data from
+        a remote serial device.
 
         Parameters:
             * data (bytearray): data to be append to the input buffer
@@ -96,4 +111,17 @@ class MySerMock:
             Nothing
         """
         self.inbuffer.extend(data)
+
+    def reset(self):
+        """
+        Reset all buffers
+
+        Parameters:
+            None
+
+        Returns:
+            Nothing
+        """
+        self.inbuffer = bytearray(b'')
+        self.outbuffer = bytearray(b'')
 

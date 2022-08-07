@@ -44,6 +44,12 @@ class BadPulseWidth(Exception):
     """
     pass
 
+class BadIOPin(Exception):
+    """
+    Raised when output IO pin is not supported by module.
+    """
+    pass
+
 class PyVoiceRecognitionV3:
     """
     Python class to interact with the Elechouse Voice Recognition Module V3
@@ -906,7 +912,71 @@ class PyVoiceRecognitionV3:
 
         return response_dict
 
-    # reset_output_io (14)
+    def reset_output_io(self, *outn):
+        """
+        Reset output IO (14)
+
+        Resets the state of selected or all output IO pins.
+
+        The method returns a dictionary containing the response message from
+        the module:
+
+            response_dict = {
+                "raw": response_bin,
+                "output_io_resetted": sorted list of pins that were resetted,
+                    }
+
+        Parameters:
+            outn (list of int or None): output io pins to be resetted. If no
+                pin is specified all output pins will be resetted. All pins
+                have to be in the range 0...6 and correspond to the places in
+                the recognizer.
+
+        Returns:
+            response (dict): dictionary containing the response
+                from the voice recognition module
+
+        Raises:
+            BadIOPin: output pin wrong or unsupported
+        """
+
+        payload = bytearray(b'\x14')
+        pins = []
+
+        # Check output io pins provided
+        if () == outn:
+            # If no argument is given (empty list) reset all io pins
+            pins = list(range(7))
+        else:
+            # Iterate over outn
+            for o in outn:
+                # Pins shall be specified as integers
+                if not isinstance(o,int):
+                    raise BadIOPin
+                else:
+                    # Valid pin numbers only in range 0...6
+                    if o < 0 or o > 6:
+                        raise BadIOPin
+                    else:
+                        pins.append(o)
+
+                # len(pins) shall never be greater than 7
+                if len(pins) > 7:
+                    raise BadIOPin
+        # Compile and send command; read response from module
+        for p in range(len(pins)):
+            payload.append(pins[p])
+        command = self._compile_cmd(payload = payload)
+        self._send_cmd(command)
+        response_bin = self._recv_rsp()
+
+        # Initialize dict for return value of this function
+        response_dict = {
+            "raw": response_bin,
+            "output_io_resetted": sorted(pins),
+                }
+
+        return response_dict
 
     # set_power_on_auto_load (15)
 
