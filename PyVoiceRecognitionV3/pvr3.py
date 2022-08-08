@@ -50,6 +50,17 @@ class BadIOPin(Exception):
     """
     pass
 
+class BadRecord(Exception):
+    """
+    Raised when record is out of range
+    """
+    pass
+
+class RecordUntrained(Exception):
+    """
+    Raised when trained record was expected but untrained provided
+    """
+
 class PyVoiceRecognitionV3:
     """
     Python class to interact with the Elechouse Voice Recognition Module V3
@@ -978,7 +989,80 @@ class PyVoiceRecognitionV3:
 
         return response_dict
 
-    # set_power_on_auto_load (15)
+    def set_power_on_auto_load(self, *records):
+        """
+        Set power on auto load (15)
+
+        Enable auto loading of (trained) records to recognizer on power on.
+
+        The method returns a dictionary containing the response message from
+        the module:
+
+            response_dict = {
+                "raw": response_bin,
+                "bitmap_hex": hex(bitmap),
+                "records_auto_load": sorted(rec),
+                    }
+
+        Parameters:
+            records (list of int or None): Records to be autoloaded when module
+                is powered. Only trained records are allowed and not more than
+                7 records (size of recognizer)
+
+        Returns:
+            response (dict): dictionary containing the response
+                from the voice recognition module
+
+        Raises:
+            BadRecord: invalid records specified
+            RecordUntrained: untrained record specified
+        """
+
+        payload = bytearray(b'\x15')
+        rec = []
+
+        # Check records provided
+        for r in records:
+            # Records shall be specified as integers
+            if not isinstance(r,int):
+                raise BadRecord
+            else:
+                # Valid pin numbers only in range 0...255
+                if r < 0 or r > 255:
+                    raise BadRecord
+                else:
+                    # Allow only trained records
+                    sta = self.check_record_train_status(record = r)["train_status"][0]
+                    if "trained" == sta:
+                        rec.append(r)
+                    else:
+                        raise RecordUntrained
+
+            # len(rec) shall never be greater than 7
+            if len(rec) > 7:
+                raise BadRecord
+
+        # Derive the value for BITMAP. Depends on the number of records in list
+        # rec. Use the following lookup table
+        bitmap_lookup = [0, 1, 3, 7, 15, 31, 63, 127]
+        bitmap = bitmap_lookup[len(rec)]
+        payload.append(bitmap)
+
+        # Compile and send command; read response from module
+        for r in range(len(rec)):
+            payload.append(rec[r])
+        command = self._compile_cmd(payload = payload)
+        self._send_cmd(command)
+        response_bin = self._recv_rsp()
+
+        # Initialize dict for return value of this function
+        response_dict = {
+            "raw": response_bin,
+            "bitmap_hex": hex(bitmap),
+            "records_auto_load": sorted(rec),
+                }
+
+        return response_dict
 
     def train_record(self, record=None, signature=None):
         """
